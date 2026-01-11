@@ -3,6 +3,7 @@ import { Lane as LaneType } from '@/hooks/useGameLogic';
 import Car from './Car';
 import Coin from './Coin';
 import Log from './Log';
+import PowerUp from './PowerUp';
 
 interface LaneProps {
   lane: LaneType;
@@ -35,10 +36,10 @@ const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
       {/* Road markings */}
       {!isGrass && !isWater && (
         <div className="absolute inset-0 flex items-center justify-around pointer-events-none">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="w-8 h-1 bg-game-road-marking/60 rounded-full"
+              className="w-6 h-1 bg-game-road-marking/60 rounded-full"
             />
           ))}
         </div>
@@ -47,13 +48,13 @@ const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
       {/* Grass details */}
       {isGrass && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="absolute w-1 h-3 bg-primary/40 rounded-full"
+              className="absolute w-1 h-2 bg-primary/40 rounded-full"
               style={{
-                left: `${10 + i * 20}%`,
-                top: '20%',
+                left: `${15 + i * 25}%`,
+                top: '25%',
                 transform: `rotate(${-10 + Math.random() * 20}deg)`,
               }}
             />
@@ -64,14 +65,13 @@ const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
       {/* Water effects */}
       {isWater && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Water ripples */}
           <div className="absolute inset-0 opacity-30">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="absolute w-12 h-1 rounded-full animate-pulse"
+                className="absolute w-8 h-1 rounded-full animate-pulse"
                 style={{
-                  left: `${i * 18}%`,
+                  left: `${i * 25}%`,
                   top: `${30 + (i % 2) * 40}%`,
                   background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
                   animationDelay: `${i * 0.2}s`,
@@ -85,6 +85,21 @@ const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
       {/* Logs */}
       {lane.logs.map((log) => (
         <Log key={log.id} log={log} gridSize={gridSize} />
+      ))}
+      
+      {/* Power-ups */}
+      {lane.powerUps.map((powerUp) => (
+        <div
+          key={powerUp.id}
+          className="absolute"
+          style={{
+            left: powerUp.x - 16,
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <PowerUp type={powerUp.type} collected={powerUp.collected} />
+        </div>
       ))}
       
       {/* Coins */}

@@ -14,50 +14,66 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
   };
 
   const buttonClass = `
-    w-14 h-14 rounded-xl bg-card/80 backdrop-blur-sm border border-border
+    w-16 h-16 rounded-2xl bg-card/90 backdrop-blur-sm border-2 border-border
     flex items-center justify-center text-foreground
-    active:bg-primary active:text-primary-foreground active:scale-95
-    transition-all duration-100 touch-manipulation
-    disabled:opacity-30
+    active:bg-primary active:text-primary-foreground active:scale-90
+    transition-all duration-75 touch-manipulation select-none
+    disabled:opacity-30 shadow-lg
   `;
 
   return (
-    <div className="md:hidden flex flex-col items-center gap-2 mt-4">
+    <div className="flex flex-col items-center gap-1 mt-2">
       <motion.button
         className={buttonClass}
-        whileTap={{ scale: 0.9 }}
-        onTouchStart={() => handlePress('up')}
+        whileTap={{ scale: 0.85 }}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          handlePress('up');
+        }}
+        onClick={() => handlePress('up')}
         disabled={disabled}
       >
-        <ChevronUp className="w-8 h-8" />
+        <ChevronUp className="w-10 h-10" strokeWidth={3} />
       </motion.button>
       
-      <div className="flex gap-2">
+      <div className="flex gap-1">
         <motion.button
           className={buttonClass}
-          whileTap={{ scale: 0.9 }}
-          onTouchStart={() => handlePress('left')}
+          whileTap={{ scale: 0.85 }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            handlePress('left');
+          }}
+          onClick={() => handlePress('left')}
           disabled={disabled}
         >
-          <ChevronLeft className="w-8 h-8" />
+          <ChevronLeft className="w-10 h-10" strokeWidth={3} />
         </motion.button>
         
         <motion.button
           className={buttonClass}
-          whileTap={{ scale: 0.9 }}
-          onTouchStart={() => handlePress('down')}
+          whileTap={{ scale: 0.85 }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            handlePress('down');
+          }}
+          onClick={() => handlePress('down')}
           disabled={disabled}
         >
-          <ChevronDown className="w-8 h-8" />
+          <ChevronDown className="w-10 h-10" strokeWidth={3} />
         </motion.button>
         
         <motion.button
           className={buttonClass}
-          whileTap={{ scale: 0.9 }}
-          onTouchStart={() => handlePress('right')}
+          whileTap={{ scale: 0.85 }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            handlePress('right');
+          }}
+          onClick={() => handlePress('right')}
           disabled={disabled}
         >
-          <ChevronRight className="w-8 h-8" />
+          <ChevronRight className="w-10 h-10" strokeWidth={3} />
         </motion.button>
       </div>
     </div>
