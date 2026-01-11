@@ -1,0 +1,69 @@
+import { memo } from 'react';
+import { Lane as LaneType } from '@/hooks/useGameLogic';
+import Car from './Car';
+
+interface LaneProps {
+  lane: LaneType;
+  gridSize: number;
+  gameWidth: number;
+}
+
+const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
+  const isGrass = lane.type === 'grass';
+  const isAlternate = lane.y % 2 === 0;
+  
+  return (
+    <div
+      className={`absolute w-full ${
+        isGrass 
+          ? isAlternate 
+            ? 'bg-game-grass' 
+            : 'bg-game-grass-light'
+          : 'bg-game-road'
+      }`}
+      style={{
+        height: gridSize,
+        left: 0,
+        right: 0,
+      }}
+    >
+      {/* Road markings */}
+      {!isGrass && (
+        <div className="absolute inset-0 flex items-center justify-around pointer-events-none">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="w-8 h-1 bg-game-road-marking/60 rounded-full"
+            />
+          ))}
+        </div>
+      )}
+      
+      {/* Grass details */}
+      {isGrass && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-3 bg-primary/40 rounded-full"
+              style={{
+                left: `${10 + i * 20}%`,
+                top: '20%',
+                transform: `rotate(${-10 + Math.random() * 20}deg)`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+      
+      {/* Cars */}
+      {lane.cars.map((car) => (
+        <Car key={car.id} car={car} />
+      ))}
+    </div>
+  );
+});
+
+Lane.displayName = 'Lane';
+
+export default Lane;
