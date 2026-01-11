@@ -13,11 +13,11 @@ export default {
   		}
   	},
   	extend: {
-  		fontFamily: {
-  			arcade: [
-  				'Press Start 2P"',
-  				'monospace'
-  			],
+		fontFamily: {
+			arcade: [
+				'"Press Start 2P"',
+				'monospace'
+			],
   			sans: [
   				'Montserrat',
   				'ui-sans-serif',
