@@ -41,13 +41,14 @@ const GameBoard = () => {
         }}
       >
         {/* Game world container that moves with camera */}
-        <motion.div
+        <div
           className="absolute w-full"
-          style={{ height: lanes.length * GRID_SIZE }}
-          animate={{ 
-            y: -(cameraY * GRID_SIZE) + (VISIBLE_LANES * GRID_SIZE) / 2 - GRID_SIZE 
+          style={{ 
+            height: lanes.length * GRID_SIZE,
+            bottom: 0,
+            transform: `translateY(${cameraY * GRID_SIZE - (VISIBLE_LANES * GRID_SIZE) / 2 + GRID_SIZE}px)`,
+            transition: 'transform 0.2s ease-out',
           }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
           {/* Render visible lanes */}
           {visibleLanes.map((lane) => (
@@ -56,6 +57,7 @@ const GameBoard = () => {
               className="absolute w-full"
               style={{ 
                 bottom: lane.y * GRID_SIZE,
+                height: GRID_SIZE,
               }}
             >
               <Lane lane={lane} gridSize={GRID_SIZE} gameWidth={GAME_WIDTH} />
@@ -63,21 +65,17 @@ const GameBoard = () => {
           ))}
           
           {/* Player */}
-          <motion.div
-            className="absolute"
+          <div
+            className="absolute z-20"
             style={{
               left: playerPos.x - PLAYER_SIZE / 2,
-              bottom: playerPos.y * GRID_SIZE - PLAYER_SIZE / 2 + GRID_SIZE / 2,
+              bottom: playerPos.y * GRID_SIZE + (GRID_SIZE - PLAYER_SIZE) / 2,
+              transition: 'left 0.1s ease-out, bottom 0.1s ease-out',
             }}
-            animate={{
-              left: playerPos.x - PLAYER_SIZE / 2,
-              bottom: playerPos.y * GRID_SIZE - PLAYER_SIZE / 2 + GRID_SIZE / 2,
-            }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           >
             <Player isHopping={isHopping} />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
         
         {/* Vignette effect */}
         <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_50px_rgba(0,0,0,0.3)]" />
