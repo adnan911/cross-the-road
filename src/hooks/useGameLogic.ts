@@ -269,25 +269,20 @@ export const useGameLogic = () => {
 
   const checkCarCollision = useCallback((px: number, py: number, currentLanes: Lane[]): boolean => {
     const lane = currentLanes[py];
+    // Only check collision if player is actually on a road lane
     if (!lane || lane.type !== 'road') return false;
 
-    const playerLeft = px - PLAYER_SIZE / 2 + 5;
-    const playerRight = px + PLAYER_SIZE / 2 - 5;
-    const playerTop = py * GRID_SIZE - PLAYER_SIZE / 2 + 5;
-    const playerBottom = py * GRID_SIZE + PLAYER_SIZE / 2 - 5;
+    // Use generous hitbox margins to prevent false positives
+    const hitboxMargin = 12;
+    const playerLeft = px - PLAYER_SIZE / 2 + hitboxMargin;
+    const playerRight = px + PLAYER_SIZE / 2 - hitboxMargin;
 
     for (const car of lane.cars) {
-      const carLeft = car.x;
-      const carRight = car.x + car.width;
-      const carTop = py * GRID_SIZE - CAR_HEIGHT / 2;
-      const carBottom = py * GRID_SIZE + CAR_HEIGHT / 2;
+      const carLeft = car.x + 5;
+      const carRight = car.x + car.width - 5;
 
-      if (
-        playerLeft < carRight &&
-        playerRight > carLeft &&
-        playerTop < carBottom &&
-        playerBottom > carTop
-      ) {
+      // Simple X-axis overlap check - player is on the same lane as car
+      if (playerLeft < carRight && playerRight > carLeft) {
         return true;
       }
     }
@@ -296,16 +291,19 @@ export const useGameLogic = () => {
 
   const checkWaterSafety = useCallback((px: number, py: number, currentLanes: Lane[]): { safe: boolean; log?: Log } => {
     const lane = currentLanes[py];
+    // Only check water safety if player is actually on a water lane
     if (!lane || lane.type !== 'water') return { safe: true };
 
-    const playerLeft = px - PLAYER_SIZE / 2 + 10;
-    const playerRight = px + PLAYER_SIZE / 2 - 10;
+    // Use smaller margins to make it easier to land on logs
+    const hitboxMargin = 5;
+    const playerCenter = px;
 
     for (const log of lane.logs) {
-      const logLeft = log.x;
-      const logRight = log.x + log.width;
+      const logLeft = log.x + hitboxMargin;
+      const logRight = log.x + log.width - hitboxMargin;
 
-      if (playerLeft >= logLeft && playerRight <= logRight) {
+      // Check if player center is on the log (more forgiving)
+      if (playerCenter >= logLeft && playerCenter <= logRight) {
         return { safe: true, log };
       }
     }
