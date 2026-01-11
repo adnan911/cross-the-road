@@ -116,6 +116,86 @@ const CatSkin = () => (
   </div>
 );
 
+const PandaSkin = () => (
+  <div className="relative">
+    <div className="relative w-8 h-8 rounded-full shadow-lg" style={{ background: '#FFFFFF' }}>
+      {/* Ears */}
+      <div className="absolute -top-1 left-0 w-3 h-3 rounded-full" style={{ background: '#1a1a1a' }} />
+      <div className="absolute -top-1 right-0 w-3 h-3 rounded-full" style={{ background: '#1a1a1a' }} />
+      {/* Eye patches */}
+      <div className="absolute top-2 left-1 w-3 h-2.5 rounded-full" style={{ background: '#1a1a1a' }}>
+        <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-white rounded-full" />
+      </div>
+      <div className="absolute top-2 right-1 w-3 h-2.5 rounded-full" style={{ background: '#1a1a1a' }}>
+        <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-white rounded-full" />
+      </div>
+      {/* Nose */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-1.5 rounded-full" style={{ background: '#1a1a1a' }} />
+    </div>
+  </div>
+);
+
+const FoxSkin = () => (
+  <div className="relative">
+    <div className="relative w-8 h-7 rounded-full shadow-lg" style={{ background: '#FF6B35' }}>
+      {/* Ears */}
+      <div 
+        className="absolute -top-3 left-0 w-0 h-0"
+        style={{
+          borderLeft: '5px solid transparent',
+          borderRight: '5px solid transparent',
+          borderBottom: '10px solid #FF6B35',
+        }}
+      >
+        <div 
+          className="absolute top-2 left-1/2 -translate-x-1/2 w-0 h-0"
+          style={{
+            borderLeft: '2px solid transparent',
+            borderRight: '2px solid transparent',
+            borderBottom: '4px solid #1a1a1a',
+          }}
+        />
+      </div>
+      <div 
+        className="absolute -top-3 right-0 w-0 h-0"
+        style={{
+          borderLeft: '5px solid transparent',
+          borderRight: '5px solid transparent',
+          borderBottom: '10px solid #FF6B35',
+        }}
+      />
+      {/* White face patch */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-4 rounded-b-full" style={{ background: '#FFF5EE' }} />
+      {/* Eyes */}
+      <div className="absolute top-2 left-1.5 w-1.5 h-2 bg-background rounded-full" />
+      <div className="absolute top-2 right-1.5 w-1.5 h-2 bg-background rounded-full" />
+      {/* Nose */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-1.5 h-1 rounded-full" style={{ background: '#1a1a1a' }} />
+    </div>
+  </div>
+);
+
+const PenguinSkin = () => (
+  <div className="relative">
+    <div className="relative w-7 h-9 rounded-full shadow-lg" style={{ background: '#1A1A2E' }}>
+      {/* White belly */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full" style={{ background: '#FFFFFF' }} />
+      {/* Eyes */}
+      <div className="absolute top-2 left-1 w-2 h-2 bg-white rounded-full">
+        <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-foreground rounded-full" />
+      </div>
+      <div className="absolute top-2 right-1 w-2 h-2 bg-white rounded-full">
+        <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-foreground rounded-full" />
+      </div>
+      {/* Beak */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-1.5 rounded-sm" style={{ background: '#FFA500' }} />
+      {/* Flippers */}
+      <div className="absolute top-4 -left-1 w-1.5 h-3 rounded-full" style={{ background: '#1A1A2E' }} />
+      <div className="absolute top-4 -right-1 w-1.5 h-3 rounded-full" style={{ background: '#1A1A2E' }} />
+    </div>
+  </div>
+);
+
 const Player = ({ isHopping, skin = 'chicken' }: PlayerProps) => {
   const renderSkin = () => {
     switch (skin) {
@@ -123,6 +203,9 @@ const Player = ({ isHopping, skin = 'chicken' }: PlayerProps) => {
       case 'frog': return <FrogSkin />;
       case 'bunny': return <BunnySkin />;
       case 'cat': return <CatSkin />;
+      case 'panda': return <PandaSkin />;
+      case 'fox': return <FoxSkin />;
+      case 'penguin': return <PenguinSkin />;
       default: return <ChickenSkin />;
     }
   };

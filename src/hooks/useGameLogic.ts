@@ -54,7 +54,7 @@ export interface Lane {
   direction: 1 | -1;
 }
 
-export type SkinType = 'chicken' | 'duck' | 'frog' | 'bunny' | 'cat';
+export type SkinType = 'chicken' | 'duck' | 'frog' | 'bunny' | 'cat' | 'panda' | 'fox' | 'penguin';
 
 export interface UnlockableSkin {
   id: SkinType;
@@ -81,10 +81,13 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 
 const DEFAULT_SKINS: UnlockableSkin[] = [
   { id: 'chicken', name: 'Chicken', requirement: { type: 'coins', value: 0 }, color: '#FFD93D', unlocked: true },
-  { id: 'duck', name: 'Duck', requirement: { type: 'coins', value: 10 }, color: '#FFA500', unlocked: false },
-  { id: 'frog', name: 'Frog', requirement: { type: 'coins', value: 25 }, color: '#4CAF50', unlocked: false },
-  { id: 'bunny', name: 'Bunny', requirement: { type: 'score', value: 50 }, color: '#FFB6C1', unlocked: false },
-  { id: 'cat', name: 'Cat', requirement: { type: 'score', value: 100 }, color: '#808080', unlocked: false },
+  { id: 'duck', name: 'Duck', requirement: { type: 'coins', value: 15 }, color: '#FFA500', unlocked: false },
+  { id: 'frog', name: 'Frog', requirement: { type: 'coins', value: 35 }, color: '#4CAF50', unlocked: false },
+  { id: 'bunny', name: 'Bunny', requirement: { type: 'score', value: 40 }, color: '#FFB6C1', unlocked: false },
+  { id: 'cat', name: 'Cat', requirement: { type: 'score', value: 75 }, color: '#808080', unlocked: false },
+  { id: 'panda', name: 'Panda', requirement: { type: 'coins', value: 60 }, color: '#FFFFFF', unlocked: false },
+  { id: 'fox', name: 'Fox', requirement: { type: 'score', value: 120 }, color: '#FF6B35', unlocked: false },
+  { id: 'penguin', name: 'Penguin', requirement: { type: 'coins', value: 100 }, color: '#1A1A2E', unlocked: false },
 ];
 
 const createLane = (y: number, type: 'grass' | 'road' | 'water'): Lane => {
