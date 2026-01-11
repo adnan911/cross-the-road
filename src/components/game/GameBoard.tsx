@@ -11,6 +11,7 @@ const GameBoard = () => {
     playerPos,
     lanes,
     score,
+    coinsCollected,
     highScore,
     isGameOver,
     isHopping,
@@ -30,7 +31,7 @@ const GameBoard = () => {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      <ScoreDisplay score={score} highScore={highScore} />
+      <ScoreDisplay score={score} highScore={highScore} coinsCollected={coinsCollected} />
       
       <div 
         className="relative overflow-hidden rounded-2xl shadow-2xl border-4 border-muted"

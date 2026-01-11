@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Lane as LaneType } from '@/hooks/useGameLogic';
 import Car from './Car';
+import Coin from './Coin';
 
 interface LaneProps {
   lane: LaneType;
@@ -55,6 +56,21 @@ const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
           ))}
         </div>
       )}
+      
+      {/* Coins */}
+      {lane.coins.map((coin) => (
+        <div
+          key={coin.id}
+          className="absolute"
+          style={{
+            left: coin.x - 12,
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <Coin collected={coin.collected} />
+        </div>
+      ))}
       
       {/* Cars */}
       {lane.cars.map((car) => (
