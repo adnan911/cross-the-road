@@ -104,14 +104,14 @@ const GameBoard = () => {
   return (
     <div className="flex flex-col items-center gap-2 w-full px-2">
       <ScoreDisplay score={score} highScore={highScore} coinsCollected={coinsCollected} />
-      
+
       {/* Active Power-ups */}
       <PowerUpDisplay activePowerUps={activePowerUps} />
-      
-      <motion.div 
+
+      <motion.div
         className="relative overflow-hidden rounded-2xl shadow-2xl border-4 border-muted"
-        style={{ 
-          width: GAME_WIDTH, 
+        style={{
+          width: GAME_WIDTH,
           height: gameHeight,
           maxWidth: '100%',
           transform: shakeTransform,
@@ -123,18 +123,18 @@ const GameBoard = () => {
         transition={{ duration: 0.3 }}
       >
         {/* Day/Night overlay */}
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none z-20 transition-all duration-1000"
-          style={{ 
+          style={{
             background: timeOfDay.overlayColor,
           }}
         />
 
         {/* Weather effects */}
-        <WeatherEffects 
-          weather={weather} 
-          width={GAME_WIDTH} 
-          height={gameHeight} 
+        <WeatherEffects
+          weather={weather}
+          width={GAME_WIDTH}
+          height={gameHeight}
         />
 
         {/* Combo Display */}
@@ -156,7 +156,7 @@ const GameBoard = () => {
         {/* Game world container that moves with camera */}
         <div
           className="absolute w-full"
-          style={{ 
+          style={{
             height: lanes.length * GRID_SIZE,
             bottom: 100, // Offset for floating controls
             transform: `translateY(${cameraY * GRID_SIZE - (VISIBLE_LANES * GRID_SIZE) / 2 + GRID_SIZE}px)`,
@@ -168,7 +168,7 @@ const GameBoard = () => {
             <div
               key={lane.y}
               className="absolute w-full"
-              style={{ 
+              style={{
                 bottom: lane.y * GRID_SIZE,
                 height: GRID_SIZE,
               }}
@@ -176,7 +176,7 @@ const GameBoard = () => {
               <Lane lane={lane} gridSize={GRID_SIZE} gameWidth={GAME_WIDTH} />
             </div>
           ))}
-          
+
           {/* Death Effect */}
           {showDeathEffect && deathCause && (
             <DeathEffect
@@ -187,7 +187,7 @@ const GameBoard = () => {
               playerSize={PLAYER_SIZE}
             />
           )}
-          
+
           {/* Player */}
           <div
             className={`absolute z-20 ${isInvincible ? 'animate-pulse' : ''}`}
@@ -204,10 +204,10 @@ const GameBoard = () => {
             <Player isHopping={isHopping} skin={selectedSkin} />
           </div>
         </div>
-        
+
         {/* Vignette effect */}
         <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.3)] z-20" />
-        
+
         {/* Time of day indicator */}
         <div className="absolute top-2 right-2 z-20 text-xs font-arcade px-2 py-1 rounded bg-background/50 backdrop-blur-sm">
           {timeOfDay.name === 'dawn' && '🌅'}
@@ -236,12 +236,12 @@ const GameBoard = () => {
         {!isGameOver && (
           <MobileControls onMove={movePlayer} disabled={isGameOver} />
         )}
-        
+
         {/* Game Over Overlay */}
         {isGameOver && (
-          <GameOverlay 
-            score={score} 
-            highScore={highScore} 
+          <GameOverlay
+            score={score}
+            highScore={highScore}
             coinsCollected={coinsCollected}
             deathCause={deathCause}
             onRestart={handleRestart}
@@ -249,16 +249,16 @@ const GameBoard = () => {
           />
         )}
       </motion.div>
-      
+
       {/* Skin Selector - Always visible */}
-      <SkinSelector 
+      <SkinSelector
         skins={skins}
         selectedSkin={selectedSkin}
         onSelectSkin={selectSkin}
         totalCoins={totalCoinsEver}
         highScore={highScore}
       />
-      
+
       <p className="text-muted-foreground text-xs text-center hidden md:block">
         Use <span className="font-arcade text-[10px] text-primary">WASD</span> or{' '}
         <span className="font-arcade text-[10px] text-primary">Arrow Keys</span> to move
