@@ -12,6 +12,7 @@ import ReportCard from './ReportCard';
 import PowerUpDisplay from './PowerUpDisplay';
 import WeatherEffects from './WeatherEffects';
 import DeathEffect from './DeathEffect';
+import ComboDisplay from './ComboDisplay';
 
 const GameBoard = () => {
   const {
@@ -31,6 +32,8 @@ const GameBoard = () => {
     resetGame,
     activePowerUps,
     hasPowerUp,
+    combo,
+    comboMultiplier,
     GRID_SIZE,
     GAME_WIDTH,
     VISIBLE_LANES,
@@ -48,6 +51,11 @@ const GameBoard = () => {
   const visibleStart = Math.max(0, Math.floor(cameraY));
   const visibleEnd = visibleStart + VISIBLE_LANES + 2;
   const visibleLanes = lanes.slice(visibleStart, visibleEnd);
+
+  // Check for boss lane warning
+  const currentLane = lanes[playerPos.y];
+  const nextLane = lanes[playerPos.y + 1];
+  const isBossAhead = nextLane?.isBossLane;
 
   // Trigger effects on death
   useEffect(() => {
@@ -90,6 +98,9 @@ const GameBoard = () => {
     return getShakeTransform();
   }, [screenShake, shakeFrame, getShakeTransform]);
 
+  // Increase game height to accommodate floating controls
+  const gameHeight = VISIBLE_LANES * GRID_SIZE + 100;
+
   return (
     <div className="flex flex-col items-center gap-2 w-full px-2">
       <ScoreDisplay score={score} highScore={highScore} coinsCollected={coinsCollected} />
@@ -101,7 +112,7 @@ const GameBoard = () => {
         className="relative overflow-hidden rounded-2xl shadow-2xl border-4 border-muted"
         style={{ 
           width: GAME_WIDTH, 
-          height: VISIBLE_LANES * GRID_SIZE,
+          height: gameHeight,
           maxWidth: '100%',
           transform: shakeTransform,
         }}
@@ -123,15 +134,31 @@ const GameBoard = () => {
         <WeatherEffects 
           weather={weather} 
           width={GAME_WIDTH} 
-          height={VISIBLE_LANES * GRID_SIZE} 
+          height={gameHeight} 
         />
+
+        {/* Combo Display */}
+        <ComboDisplay combo={combo} multiplier={comboMultiplier} />
+
+        {/* Boss warning */}
+        {isBossAhead && !isGameOver && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute top-10 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-lg bg-destructive/90 backdrop-blur-sm shadow-lg"
+          >
+            <span className="font-arcade text-[10px] text-destructive-foreground animate-pulse">
+              ⚠️ BOSS LANE AHEAD ⚠️
+            </span>
+          </motion.div>
+        )}
 
         {/* Game world container that moves with camera */}
         <div
           className="absolute w-full"
           style={{ 
             height: lanes.length * GRID_SIZE,
-            bottom: 0,
+            bottom: 100, // Offset for floating controls
             transform: `translateY(${cameraY * GRID_SIZE - (VISIBLE_LANES * GRID_SIZE) / 2 + GRID_SIZE}px)`,
             transition: 'transform 0.2s ease-out',
           }}
@@ -195,6 +222,20 @@ const GameBoard = () => {
             </span>
           )}
         </div>
+
+        {/* Reverse mode indicator */}
+        {currentLane?.isReverse && !isGameOver && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 px-2 py-1 rounded bg-secondary/80 backdrop-blur-sm">
+            <span className="font-arcade text-[8px] text-secondary-foreground">
+              ↔️ REVERSE
+            </span>
+          </div>
+        )}
+
+        {/* Floating Mobile Controls */}
+        {!isGameOver && (
+          <MobileControls onMove={movePlayer} disabled={isGameOver} />
+        )}
         
         {/* Game Over Overlay */}
         {isGameOver && (
@@ -208,8 +249,6 @@ const GameBoard = () => {
           />
         )}
       </motion.div>
-      
-      <MobileControls onMove={movePlayer} disabled={isGameOver} />
       
       {/* Skin Selector - Always visible */}
       <SkinSelector 

@@ -33,6 +33,7 @@ export interface Car {
   direction: 1 | -1;
   color: 'red' | 'blue' | 'yellow' | 'green' | 'purple';
   width: number;
+  isBoss?: boolean; // Boss vehicles (trucks/trains)
 }
 
 export interface Log {
@@ -52,6 +53,8 @@ export interface Lane {
   powerUps: PowerUp[];
   speed: number;
   direction: 1 | -1;
+  isBossLane?: boolean; // Boss lane with giant truck/train
+  isReverse?: boolean; // Reverse mode - unexpected directions
 }
 
 export type SkinType = 'chicken' | 'duck' | 'frog' | 'bunny' | 'cat' | 'panda' | 'fox' | 'penguin';
@@ -90,9 +93,15 @@ const DEFAULT_SKINS: UnlockableSkin[] = [
   { id: 'penguin', name: 'Penguin', requirement: { type: 'coins', value: 100 }, color: '#1A1A2E', unlocked: false },
 ];
 
-const createLane = (y: number, type: 'grass' | 'road' | 'water'): Lane => {
+const createLane = (y: number, type: 'grass' | 'road' | 'water', forceBoss: boolean = false): Lane => {
   const coins: Coin[] = [];
   const powerUps: PowerUp[] = [];
+  
+  // Boss lane every 50 points (y positions)
+  const isBossLane = forceBoss || (y > 0 && y % 50 === 0 && type === 'road');
+  
+  // Reverse mode starts after 30 points, 20% chance
+  const isReverse = y > 30 && Math.random() < 0.2;
   
   // Add coins to grass lanes (30% chance per lane, 1-2 coins)
   if (type === 'grass' && y > 0 && Math.random() < 0.3) {
@@ -117,50 +126,79 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water'): Lane => {
   }
   
   if (type === 'grass') {
-    return { type: 'grass', y, cars: [], coins, logs: [], powerUps, speed: 0, direction: 1 };
+    return { type: 'grass', y, cars: [], coins, logs: [], powerUps, speed: 0, direction: 1, isBossLane: false, isReverse: false };
   }
   
   if (type === 'water') {
-    const speed = 1 + Math.random() * 1.5; // Slower for mobile
+    const speed = 1 + Math.random() * 1.5;
     const direction = Math.random() > 0.5 ? 1 : -1 as 1 | -1;
     const logs: Log[] = [];
     
-    // Generate 2-3 logs per water lane
     const numLogs = 2 + Math.floor(Math.random() * 2);
     const logSpacing = GAME_WIDTH / numLogs;
     for (let i = 0; i < numLogs; i++) {
       logs.push({
         id: generateId(),
         x: i * logSpacing + Math.random() * (logSpacing / 2),
-        width: 70 + Math.random() * 30, // Slightly smaller for mobile
+        width: 70 + Math.random() * 30,
         speed,
         direction,
       });
     }
     
-    return { type: 'water', y, cars: [], coins: [], logs, powerUps: [], speed, direction };
+    return { type: 'water', y, cars: [], coins: [], logs, powerUps: [], speed, direction, isBossLane: false, isReverse: false };
   }
   
-  const speed = 1 + Math.random() * 2; // Slower cars for mobile
+  // Road lane with cars
+  const baseSpeed = isBossLane ? 4 + Math.random() * 2 : 1 + Math.random() * 2;
   const direction = Math.random() > 0.5 ? 1 : -1 as 1 | -1;
   const cars: Car[] = [];
   
-  // Generate 1-2 cars per road lane
-  const numCars = 1 + Math.floor(Math.random() * 1);
-  for (let i = 0; i < numCars; i++) {
-    const carWidth = 50 + Math.random() * 30; // Smaller cars for mobile
+  if (isBossLane) {
+    // Boss lane: one giant truck/train
     cars.push({
       id: generateId(),
       x: Math.random() * GAME_WIDTH,
       lane: y,
-      speed,
+      speed: baseSpeed,
       direction,
       color: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)],
-      width: carWidth,
+      width: 120 + Math.random() * 40, // Giant vehicle
+      isBoss: true,
     });
+  } else {
+    // Normal lane with 1-2 cars
+    const numCars = 1 + Math.floor(Math.random() * 1);
+    for (let i = 0; i < numCars; i++) {
+      const carWidth = 50 + Math.random() * 30;
+      cars.push({
+        id: generateId(),
+        x: Math.random() * GAME_WIDTH,
+        lane: y,
+        speed: baseSpeed,
+        direction: isReverse ? (direction * -1 as 1 | -1) : direction, // Reverse some cars
+        color: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)],
+        width: carWidth,
+        isBoss: false,
+      });
+    }
+    
+    // In reverse mode, add a car going opposite direction
+    if (isReverse && Math.random() < 0.5) {
+      cars.push({
+        id: generateId(),
+        x: Math.random() * GAME_WIDTH,
+        lane: y,
+        speed: baseSpeed * 1.2,
+        direction: (direction * -1) as 1 | -1,
+        color: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)],
+        width: 50 + Math.random() * 20,
+        isBoss: false,
+      });
+    }
   }
   
-  return { type: 'road', y, cars, coins: [], logs: [], powerUps: [], speed, direction };
+  return { type: 'road', y, cars, coins: [], logs: [], powerUps: [], speed: baseSpeed, direction, isBossLane, isReverse };
 };
 
 const generateInitialLanes = (): Lane[] => {
@@ -222,6 +260,13 @@ export const useGameLogic = () => {
   const [isOnLog, setIsOnLog] = useState(false);
   const [currentLogSpeed, setCurrentLogSpeed] = useState<{ speed: number; direction: 1 | -1 } | null>(null);
   const [activePowerUps, setActivePowerUps] = useState<ActivePowerUp[]>([]);
+  
+  // Combo system
+  const [combo, setCombo] = useState(0);
+  const [comboMultiplier, setComboMultiplier] = useState(1);
+  const comboTimerRef = useRef<number | null>(null);
+  const lastHopTimeRef = useRef<number>(0);
+  
   const gameLoopRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
@@ -417,6 +462,37 @@ export const useGameLogic = () => {
   const movePlayer = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (isGameOver || isHopping) return;
 
+    const now = Date.now();
+    const timeSinceLastHop = now - lastHopTimeRef.current;
+    lastHopTimeRef.current = now;
+
+    // Combo system - chain hops within 800ms
+    if (timeSinceLastHop < 800 && direction === 'up') {
+      setCombo(c => {
+        const newCombo = c + 1;
+        // Update multiplier based on combo
+        if (newCombo >= 10) setComboMultiplier(3);
+        else if (newCombo >= 5) setComboMultiplier(2);
+        else if (newCombo >= 3) setComboMultiplier(1.5);
+        return newCombo;
+      });
+    } else if (direction === 'up') {
+      // Reset combo if too slow
+      setCombo(1);
+      setComboMultiplier(1);
+    }
+
+    // Clear existing combo timer
+    if (comboTimerRef.current) {
+      clearTimeout(comboTimerRef.current);
+    }
+
+    // Set timer to reset combo if no hop within 1.5 seconds
+    comboTimerRef.current = window.setTimeout(() => {
+      setCombo(0);
+      setComboMultiplier(1);
+    }, 1500);
+
     setIsHopping(true);
     setTimeout(() => setIsHopping(false), 150);
 
@@ -445,21 +521,28 @@ export const useGameLogic = () => {
           const newLanes = [...prevLanes];
           for (let i = 0; i < 10; i++) {
             const laneY = newLanes.length;
+            const isBossLane = laneY % 50 === 0;
             const rand = Math.random();
             let type: 'grass' | 'road' | 'water';
-            if (rand < 0.5) type = 'road';
-            else if (rand < 0.8) type = 'grass';
-            else type = 'water';
-            newLanes.push(createLane(laneY, type));
+            if (isBossLane) {
+              type = 'road'; // Force road for boss lanes
+            } else if (rand < 0.5) {
+              type = 'road';
+            } else if (rand < 0.8) {
+              type = 'grass';
+            } else {
+              type = 'water';
+            }
+            newLanes.push(createLane(laneY, type, isBossLane));
           }
           return newLanes;
         });
       }
 
-      // Update score
+      // Update score with combo multiplier
       if (newY > maxY) {
         setMaxY(newY);
-        setScore((s) => s + 1);
+        setScore((s) => s + Math.floor(1 * comboMultiplier));
       }
 
       // Check for coin and power-up collection after move
@@ -471,7 +554,7 @@ export const useGameLogic = () => {
 
       return { x: newX, y: newY };
     });
-  }, [isGameOver, isHopping, lanes.length, maxY, checkCoinCollection, checkPowerUpCollection, activePowerUps]);
+  }, [isGameOver, isHopping, lanes.length, maxY, checkCoinCollection, checkPowerUpCollection, activePowerUps, comboMultiplier]);
 
   const resetGame = useCallback(() => {
     setPlayerPos({ x: GAME_WIDTH / 2, y: 0 });
@@ -485,6 +568,10 @@ export const useGameLogic = () => {
     setIsOnLog(false);
     setCurrentLogSpeed(null);
     setActivePowerUps([]);
+    setCombo(0);
+    setComboMultiplier(1);
+    lastHopTimeRef.current = 0;
+    if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
   }, []);
 
   // Game loop for moving cars, logs, and player on logs
@@ -673,6 +760,8 @@ export const useGameLogic = () => {
     resetGame,
     activePowerUps,
     hasPowerUp,
+    combo,
+    comboMultiplier,
     GRID_SIZE,
     GAME_WIDTH,
     VISIBLE_LANES,
