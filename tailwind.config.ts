@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        arcade: ['"Press Start 2P"', 'monospace'],
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +50,19 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        game: {
+          grass: "hsl(var(--grass))",
+          "grass-light": "hsl(var(--grass-light))",
+          road: "hsl(var(--road))",
+          "road-marking": "hsl(var(--road-marking))",
+          water: "hsl(var(--water))",
+          player: "hsl(var(--player))",
+          "car-red": "hsl(var(--car-red))",
+          "car-blue": "hsl(var(--car-blue))",
+          "car-yellow": "hsl(var(--car-yellow))",
+          "car-green": "hsl(var(--car-green))",
+          "car-purple": "hsl(var(--car-purple))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
