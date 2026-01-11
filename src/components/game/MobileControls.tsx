@@ -14,15 +14,15 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
   };
 
   const buttonClass = `
-    w-16 h-16 rounded-2xl bg-card/90 backdrop-blur-sm border-2 border-border
-    flex items-center justify-center text-foreground
+    w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-background/60 backdrop-blur-md border border-border/50
+    flex items-center justify-center text-foreground/80
     active:bg-primary active:text-primary-foreground active:scale-90
     transition-all duration-75 touch-manipulation select-none
-    disabled:opacity-30 shadow-lg
+    disabled:opacity-20 shadow-lg hover:bg-background/80
   `;
 
   return (
-    <div className="flex flex-col items-center gap-1 mt-2">
+    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1">
       <motion.button
         className={buttonClass}
         whileTap={{ scale: 0.85 }}
@@ -33,7 +33,7 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
         onClick={() => handlePress('up')}
         disabled={disabled}
       >
-        <ChevronUp className="w-10 h-10" strokeWidth={3} />
+        <ChevronUp className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
       </motion.button>
       
       <div className="flex gap-1">
@@ -47,7 +47,7 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
           onClick={() => handlePress('left')}
           disabled={disabled}
         >
-          <ChevronLeft className="w-10 h-10" strokeWidth={3} />
+          <ChevronLeft className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
         </motion.button>
         
         <motion.button
@@ -60,7 +60,7 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
           onClick={() => handlePress('down')}
           disabled={disabled}
         >
-          <ChevronDown className="w-10 h-10" strokeWidth={3} />
+          <ChevronDown className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
         </motion.button>
         
         <motion.button
@@ -73,7 +73,7 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
           onClick={() => handlePress('right')}
           disabled={disabled}
         >
-          <ChevronRight className="w-10 h-10" strokeWidth={3} />
+          <ChevronRight className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
         </motion.button>
       </div>
     </div>
