@@ -88,6 +88,8 @@ const GameBoard = () => {
             style={{
               left: playerPos.x - PLAYER_SIZE / 2,
               bottom: playerPos.y * GRID_SIZE + (GRID_SIZE - PLAYER_SIZE) / 2,
+              width: PLAYER_SIZE,
+              height: PLAYER_SIZE,
               transition: 'left 0.1s ease-out, bottom 0.1s ease-out',
             }}
           >

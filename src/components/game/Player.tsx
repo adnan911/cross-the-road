@@ -129,8 +129,7 @@ const Player = ({ isHopping, skin = 'chicken' }: PlayerProps) => {
 
   return (
     <motion.div
-      className="absolute z-20 flex items-center justify-center"
-      style={{ width: 40, height: 40 }}
+      className="w-full h-full flex items-center justify-center"
       animate={{
         scale: isHopping ? [1, 1.2, 1] : 1,
         y: isHopping ? [0, -8, 0] : 0,

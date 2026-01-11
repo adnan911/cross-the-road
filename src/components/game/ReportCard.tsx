@@ -217,14 +217,23 @@ const ReportCard = ({
           </motion.div>
         )}
 
-        {/* Download button */}
-        <Button
-          onClick={downloadReport}
-          className="w-full mt-6 font-arcade text-xs gap-2 bg-primary hover:bg-primary/90"
-        >
-          <Download className="w-4 h-4" />
-          DOWNLOAD REPORT
-        </Button>
+        {/* Action buttons */}
+        <div className="flex gap-3 mt-6">
+          <Button
+            onClick={onClose}
+            variant="outline"
+            className="flex-1 font-arcade text-xs"
+          >
+            BACK
+          </Button>
+          <Button
+            onClick={downloadReport}
+            className="flex-1 font-arcade text-xs gap-2 bg-primary hover:bg-primary/90"
+          >
+            <Download className="w-4 h-4" />
+            DOWNLOAD
+          </Button>
+        </div>
 
         {/* Date */}
         <p className="text-center text-muted-foreground/60 text-[8px] mt-3">
