@@ -11,6 +11,20 @@ export interface Coin {
   collected: boolean;
 }
 
+export type PowerUpType = 'invincibility' | 'magnet' | 'slowmo';
+
+export interface PowerUp {
+  id: string;
+  x: number;
+  type: PowerUpType;
+  collected: boolean;
+}
+
+export interface ActivePowerUp {
+  type: PowerUpType;
+  endTime: number;
+}
+
 export interface Car {
   id: string;
   x: number;
@@ -35,6 +49,7 @@ export interface Lane {
   cars: Car[];
   coins: Coin[];
   logs: Log[];
+  powerUps: PowerUp[];
   speed: number;
   direction: 1 | -1;
 }
@@ -54,9 +69,13 @@ const PLAYER_SIZE = 40;
 const CAR_HEIGHT = 35;
 const COIN_SIZE = 24;
 const LOG_HEIGHT = 40;
-const GAME_WIDTH = 600;
-const VISIBLE_LANES = 12;
+const POWER_UP_SIZE = 32;
+const POWER_UP_DURATION = 5000; // 5 seconds
+const MAGNET_RANGE = 150;
+const GAME_WIDTH = Math.min(400, window.innerWidth - 16); // Mobile-first width
+const VISIBLE_LANES = 10; // Fewer lanes for mobile
 const CAR_COLORS: Car['color'][] = ['red', 'blue', 'yellow', 'green', 'purple'];
+const POWER_UP_TYPES: PowerUpType[] = ['invincibility', 'magnet', 'slowmo'];
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -70,6 +89,7 @@ const DEFAULT_SKINS: UnlockableSkin[] = [
 
 const createLane = (y: number, type: 'grass' | 'road' | 'water'): Lane => {
   const coins: Coin[] = [];
+  const powerUps: PowerUp[] = [];
   
   // Add coins to grass lanes (30% chance per lane, 1-2 coins)
   if (type === 'grass' && y > 0 && Math.random() < 0.3) {
@@ -83,12 +103,22 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water'): Lane => {
     }
   }
   
+  // Add power-ups to grass lanes (10% chance per lane)
+  if (type === 'grass' && y > 0 && Math.random() < 0.1) {
+    powerUps.push({
+      id: generateId(),
+      x: 50 + Math.random() * (GAME_WIDTH - 100),
+      type: POWER_UP_TYPES[Math.floor(Math.random() * POWER_UP_TYPES.length)],
+      collected: false,
+    });
+  }
+  
   if (type === 'grass') {
-    return { type: 'grass', y, cars: [], coins, logs: [], speed: 0, direction: 1 };
+    return { type: 'grass', y, cars: [], coins, logs: [], powerUps, speed: 0, direction: 1 };
   }
   
   if (type === 'water') {
-    const speed = 1 + Math.random() * 2;
+    const speed = 1 + Math.random() * 1.5; // Slower for mobile
     const direction = Math.random() > 0.5 ? 1 : -1 as 1 | -1;
     const logs: Log[] = [];
     
@@ -99,23 +129,23 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water'): Lane => {
       logs.push({
         id: generateId(),
         x: i * logSpacing + Math.random() * (logSpacing / 2),
-        width: 80 + Math.random() * 40,
+        width: 70 + Math.random() * 30, // Slightly smaller for mobile
         speed,
         direction,
       });
     }
     
-    return { type: 'water', y, cars: [], coins: [], logs, speed, direction };
+    return { type: 'water', y, cars: [], coins: [], logs, powerUps: [], speed, direction };
   }
   
-  const speed = 1 + Math.random() * 3;
+  const speed = 1 + Math.random() * 2; // Slower cars for mobile
   const direction = Math.random() > 0.5 ? 1 : -1 as 1 | -1;
   const cars: Car[] = [];
   
-  // Generate 1-3 cars per road lane
-  const numCars = 1 + Math.floor(Math.random() * 2);
+  // Generate 1-2 cars per road lane
+  const numCars = 1 + Math.floor(Math.random() * 1);
   for (let i = 0; i < numCars; i++) {
-    const carWidth = 60 + Math.random() * 40;
+    const carWidth = 50 + Math.random() * 30; // Smaller cars for mobile
     cars.push({
       id: generateId(),
       x: Math.random() * GAME_WIDTH,
@@ -127,7 +157,7 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water'): Lane => {
     });
   }
   
-  return { type: 'road', y, cars, coins: [], logs: [], speed, direction };
+  return { type: 'road', y, cars, coins: [], logs: [], powerUps: [], speed, direction };
 };
 
 const generateInitialLanes = (): Lane[] => {
@@ -188,6 +218,7 @@ export const useGameLogic = () => {
   const [selectedSkin, setSelectedSkin] = useState<SkinType>(loadSelectedSkin);
   const [isOnLog, setIsOnLog] = useState(false);
   const [currentLogSpeed, setCurrentLogSpeed] = useState<{ speed: number; direction: 1 | -1 } | null>(null);
+  const [activePowerUps, setActivePowerUps] = useState<ActivePowerUp[]>([]);
   const gameLoopRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
@@ -230,38 +261,108 @@ export const useGameLogic = () => {
     }
   }, [skins]);
 
-  const checkCoinCollection = useCallback((px: number, py: number) => {
+  // Check if a power-up is active
+  const hasPowerUp = useCallback((type: PowerUpType): boolean => {
+    return activePowerUps.some(p => p.type === type && p.endTime > Date.now());
+  }, [activePowerUps]);
+
+  // Activate a power-up
+  const activatePowerUp = useCallback((type: PowerUpType) => {
+    const endTime = Date.now() + POWER_UP_DURATION;
+    setActivePowerUps(prev => {
+      // Remove existing of same type and add new
+      const filtered = prev.filter(p => p.type !== type);
+      return [...filtered, { type, endTime }];
+    });
+  }, []);
+
+  // Clean up expired power-ups
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActivePowerUps(prev => prev.filter(p => p.endTime > Date.now()));
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkPowerUpCollection = useCallback((px: number, py: number) => {
     setLanes((prevLanes) => {
       const lane = prevLanes[py];
       if (!lane || lane.type !== 'grass') return prevLanes;
 
       let collected = false;
-      const updatedCoins = lane.coins.map((coin) => {
-        if (coin.collected) return coin;
+      let collectedType: PowerUpType | null = null;
+      const updatedPowerUps = lane.powerUps.map((powerUp) => {
+        if (powerUp.collected) return powerUp;
         
-        const coinLeft = coin.x - COIN_SIZE / 2;
-        const coinRight = coin.x + COIN_SIZE / 2;
+        const puLeft = powerUp.x - POWER_UP_SIZE / 2;
+        const puRight = powerUp.x + POWER_UP_SIZE / 2;
         const playerLeft = px - PLAYER_SIZE / 2;
         const playerRight = px + PLAYER_SIZE / 2;
         
-        if (playerLeft < coinRight && playerRight > coinLeft) {
+        if (playerLeft < puRight && playerRight > puLeft) {
           collected = true;
-          return { ...coin, collected: true };
+          collectedType = powerUp.type;
+          return { ...powerUp, collected: true };
         }
-        return coin;
+        return powerUp;
       });
 
-      if (collected) {
-        setCoinsCollected((c) => c + 1);
+      if (collected && collectedType) {
+        activatePowerUp(collectedType);
+        return prevLanes.map((l, idx) => 
+          idx === py ? { ...l, powerUps: updatedPowerUps } : l
+        );
+      }
+      return prevLanes;
+    });
+  }, [activatePowerUp]);
+
+  const checkCoinCollection = useCallback((px: number, py: number, magnetActive: boolean) => {
+    setLanes((prevLanes) => {
+      let totalCollected = 0;
+      
+      const newLanes = prevLanes.map((lane, idx) => {
+        if (lane.type !== 'grass') return lane;
+        
+        // Check coins in current lane and nearby lanes if magnet is active
+        const isInRange = magnetActive 
+          ? Math.abs(idx - py) <= 2 
+          : idx === py;
+        
+        if (!isInRange) return lane;
+
+        let laneCollected = false;
+        const updatedCoins = lane.coins.map((coin) => {
+          if (coin.collected) return coin;
+          
+          const coinLeft = coin.x - COIN_SIZE / 2;
+          const coinRight = coin.x + COIN_SIZE / 2;
+          const playerLeft = px - (magnetActive ? MAGNET_RANGE : PLAYER_SIZE / 2);
+          const playerRight = px + (magnetActive ? MAGNET_RANGE : PLAYER_SIZE / 2);
+          
+          if (playerLeft < coinRight && playerRight > coinLeft) {
+            laneCollected = true;
+            totalCollected++;
+            return { ...coin, collected: true };
+          }
+          return coin;
+        });
+
+        if (laneCollected) {
+          return { ...lane, coins: updatedCoins };
+        }
+        return lane;
+      });
+
+      if (totalCollected > 0) {
+        setCoinsCollected((c) => c + totalCollected);
         setTotalCoinsEver((prev) => {
-          const newTotal = prev + 1;
+          const newTotal = prev + totalCollected;
           localStorage.setItem('crossyTotalCoins', newTotal.toString());
           return newTotal;
         });
-        setScore((s) => s + 5);
-        return prevLanes.map((l, idx) => 
-          idx === py ? { ...l, coins: updatedCoins } : l
-        );
+        setScore((s) => s + 5 * totalCollected);
+        return newLanes;
       }
       return prevLanes;
     });
@@ -358,12 +459,16 @@ export const useGameLogic = () => {
         setScore((s) => s + 1);
       }
 
-      // Check for coin collection after move
-      setTimeout(() => checkCoinCollection(newX, newY), 0);
+      // Check for coin and power-up collection after move
+      setTimeout(() => {
+        const magnetActive = activePowerUps.some(p => p.type === 'magnet' && p.endTime > Date.now());
+        checkCoinCollection(newX, newY, magnetActive);
+        checkPowerUpCollection(newX, newY);
+      }, 0);
 
       return { x: newX, y: newY };
     });
-  }, [isGameOver, isHopping, lanes.length, maxY, checkCoinCollection]);
+  }, [isGameOver, isHopping, lanes.length, maxY, checkCoinCollection, checkPowerUpCollection, activePowerUps]);
 
   const resetGame = useCallback(() => {
     setPlayerPos({ x: GAME_WIDTH / 2, y: 0 });
@@ -376,6 +481,7 @@ export const useGameLogic = () => {
     setDeathCause(null);
     setIsOnLog(false);
     setCurrentLogSpeed(null);
+    setActivePowerUps([]);
   }, []);
 
   // Game loop for moving cars, logs, and player on logs
@@ -387,11 +493,15 @@ export const useGameLogic = () => {
       if (delta > 16) { // ~60fps
         lastTimeRef.current = timestamp;
         
+        // Check for slow-mo power-up
+        const slowMoActive = activePowerUps.some(p => p.type === 'slowmo' && p.endTime > Date.now());
+        const speedMultiplier = slowMoActive ? 0.4 : 1;
+        
         setLanes((prevLanes) => {
           const newLanes = prevLanes.map((lane) => {
             if (lane.type === 'road') {
               const updatedCars = lane.cars.map((car) => {
-                let newX = car.x + car.speed * car.direction;
+                let newX = car.x + car.speed * car.direction * speedMultiplier;
                 
                 // Wrap around
                 if (car.direction === 1 && newX > GAME_WIDTH + car.width) {
@@ -408,7 +518,7 @@ export const useGameLogic = () => {
             
             if (lane.type === 'water') {
               const updatedLogs = lane.logs.map((log) => {
-                let newX = log.x + log.speed * log.direction;
+                let newX = log.x + log.speed * log.direction * speedMultiplier;
                 
                 // Wrap around
                 if (log.direction === 1 && newX > GAME_WIDTH + log.width) {
@@ -426,8 +536,9 @@ export const useGameLogic = () => {
             return lane;
           });
           
-          // Check car collision
-          if (!isGameOver && checkCarCollision(playerPos.x, playerPos.y, newLanes)) {
+          // Check car collision (skip if invincible)
+          const isInvincible = activePowerUps.some(p => p.type === 'invincibility' && p.endTime > Date.now());
+          if (!isGameOver && !isInvincible && checkCarCollision(playerPos.x, playerPos.y, newLanes)) {
             setIsGameOver(true);
             setDeathCause('car');
             const finalScore = score;
@@ -438,13 +549,13 @@ export const useGameLogic = () => {
             checkSkinUnlocks(finalScore, totalCoinsEver);
           }
           
-          // Check water safety
+          // Check water safety (skip if invincible)
           if (!isGameOver) {
             const waterCheck = checkWaterSafety(playerPos.x, playerPos.y, newLanes);
             const currentLane = newLanes[playerPos.y];
             
             if (currentLane?.type === 'water') {
-              if (!waterCheck.safe) {
+              if (!waterCheck.safe && !isInvincible) {
                 setIsGameOver(true);
                 setDeathCause('water');
                 const finalScore = score;
@@ -455,7 +566,11 @@ export const useGameLogic = () => {
                 checkSkinUnlocks(finalScore, totalCoinsEver);
               } else if (waterCheck.log) {
                 setIsOnLog(true);
-                setCurrentLogSpeed({ speed: waterCheck.log.speed, direction: waterCheck.log.direction });
+                setCurrentLogSpeed({ speed: waterCheck.log.speed * speedMultiplier, direction: waterCheck.log.direction });
+              } else if (isInvincible) {
+                // When invincible in water without log, don't die but also don't move with logs
+                setIsOnLog(false);
+                setCurrentLogSpeed(null);
               }
             } else {
               setIsOnLog(false);
@@ -494,7 +609,7 @@ export const useGameLogic = () => {
     return () => {
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     };
-  }, [playerPos, isGameOver, checkCarCollision, checkWaterSafety, score, highScore, isOnLog, currentLogSpeed, checkSkinUnlocks, totalCoinsEver]);
+  }, [playerPos, isGameOver, checkCarCollision, checkWaterSafety, score, highScore, isOnLog, currentLogSpeed, checkSkinUnlocks, totalCoinsEver, activePowerUps]);
 
   // Keyboard controls
   useEffect(() => {
@@ -553,6 +668,8 @@ export const useGameLogic = () => {
     selectSkin,
     movePlayer,
     resetGame,
+    activePowerUps,
+    hasPowerUp,
     GRID_SIZE,
     GAME_WIDTH,
     VISIBLE_LANES,

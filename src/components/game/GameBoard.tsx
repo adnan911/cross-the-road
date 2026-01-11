@@ -7,6 +7,7 @@ import ScoreDisplay from './ScoreDisplay';
 import MobileControls from './MobileControls';
 import SkinSelector from './SkinSelector';
 import ReportCard from './ReportCard';
+import PowerUpDisplay from './PowerUpDisplay';
 
 const GameBoard = () => {
   const {
@@ -24,6 +25,8 @@ const GameBoard = () => {
     selectSkin,
     movePlayer,
     resetGame,
+    activePowerUps,
+    hasPowerUp,
     GRID_SIZE,
     GAME_WIDTH,
     VISIBLE_LANES,
@@ -46,16 +49,22 @@ const GameBoard = () => {
     setShowReport(false);
   };
 
+  // Check if player has invincibility for visual effect
+  const isInvincible = hasPowerUp('invincibility');
+
   return (
-    <div className="flex flex-col items-center gap-4 w-full">
+    <div className="flex flex-col items-center gap-2 w-full px-2">
       <ScoreDisplay score={score} highScore={highScore} coinsCollected={coinsCollected} />
+      
+      {/* Active Power-ups */}
+      <PowerUpDisplay activePowerUps={activePowerUps} />
       
       <div 
         className="relative overflow-hidden rounded-2xl shadow-2xl border-4 border-muted"
         style={{ 
           width: GAME_WIDTH, 
           height: VISIBLE_LANES * GRID_SIZE,
-          maxWidth: '100vw',
+          maxWidth: '100%',
         }}
       >
         {/* Game world container that moves with camera */}
@@ -84,13 +93,14 @@ const GameBoard = () => {
           
           {/* Player */}
           <div
-            className="absolute z-20"
+            className={`absolute z-20 ${isInvincible ? 'animate-pulse' : ''}`}
             style={{
               left: playerPos.x - PLAYER_SIZE / 2,
               bottom: playerPos.y * GRID_SIZE + (GRID_SIZE - PLAYER_SIZE) / 2,
               width: PLAYER_SIZE,
               height: PLAYER_SIZE,
               transition: 'left 0.1s ease-out, bottom 0.1s ease-out',
+              filter: isInvincible ? 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8))' : 'none',
             }}
           >
             <Player isHopping={isHopping} skin={selectedSkin} />
@@ -98,7 +108,7 @@ const GameBoard = () => {
         </div>
         
         {/* Vignette effect */}
-        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_50px_rgba(0,0,0,0.3)]" />
+        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.3)]" />
         
         {/* Game Over Overlay */}
         {isGameOver && (
@@ -115,18 +125,20 @@ const GameBoard = () => {
       
       <MobileControls onMove={movePlayer} disabled={isGameOver} />
       
-      {/* Skin Selector */}
-      <SkinSelector 
-        skins={skins}
-        selectedSkin={selectedSkin}
-        onSelectSkin={selectSkin}
-        totalCoins={totalCoinsEver}
-        highScore={highScore}
-      />
+      {/* Skin Selector - Hidden on very small screens during gameplay */}
+      <div className="hidden sm:block">
+        <SkinSelector 
+          skins={skins}
+          selectedSkin={selectedSkin}
+          onSelectSkin={selectSkin}
+          totalCoins={totalCoinsEver}
+          highScore={highScore}
+        />
+      </div>
       
-      <p className="text-muted-foreground text-sm text-center">
-        Use <span className="font-arcade text-xs text-primary">WASD</span> or{' '}
-        <span className="font-arcade text-xs text-primary">Arrow Keys</span> to move
+      <p className="text-muted-foreground text-xs text-center hidden md:block">
+        Use <span className="font-arcade text-[10px] text-primary">WASD</span> or{' '}
+        <span className="font-arcade text-[10px] text-primary">Arrow Keys</span> to move
       </p>
 
       {/* Report Card Modal */}
