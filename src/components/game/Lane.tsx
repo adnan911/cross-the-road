@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Lane as LaneType } from '@/hooks/useGameLogic';
 import Car from './Car';
 import Coin from './Coin';
+import Log from './Log';
 
 interface LaneProps {
   lane: LaneType;
@@ -11,6 +12,7 @@ interface LaneProps {
 
 const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
   const isGrass = lane.type === 'grass';
+  const isWater = lane.type === 'water';
   const isAlternate = lane.y % 2 === 0;
   
   return (
@@ -20,7 +22,9 @@ const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
           ? isAlternate 
             ? 'bg-game-grass' 
             : 'bg-game-grass-light'
-          : 'bg-game-road'
+          : isWater
+            ? 'bg-game-water'
+            : 'bg-game-road'
       }`}
       style={{
         height: gridSize,
@@ -29,7 +33,7 @@ const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
       }}
     >
       {/* Road markings */}
-      {!isGrass && (
+      {!isGrass && !isWater && (
         <div className="absolute inset-0 flex items-center justify-around pointer-events-none">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
@@ -56,6 +60,32 @@ const Lane = memo(({ lane, gridSize, gameWidth }: LaneProps) => {
           ))}
         </div>
       )}
+      
+      {/* Water effects */}
+      {isWater && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Water ripples */}
+          <div className="absolute inset-0 opacity-30">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-12 h-1 rounded-full animate-pulse"
+                style={{
+                  left: `${i * 18}%`,
+                  top: `${30 + (i % 2) * 40}%`,
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                  animationDelay: `${i * 0.2}s`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Logs */}
+      {lane.logs.map((log) => (
+        <Log key={log.id} log={log} gridSize={gridSize} />
+      ))}
       
       {/* Coins */}
       {lane.coins.map((coin) => (

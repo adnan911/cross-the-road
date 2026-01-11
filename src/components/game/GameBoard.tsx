@@ -1,10 +1,12 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import Player from './Player';
 import Lane from './Lane';
 import GameOverlay from './GameOverlay';
 import ScoreDisplay from './ScoreDisplay';
 import MobileControls from './MobileControls';
+import SkinSelector from './SkinSelector';
+import ReportCard from './ReportCard';
 
 const GameBoard = () => {
   const {
@@ -12,9 +14,14 @@ const GameBoard = () => {
     lanes,
     score,
     coinsCollected,
+    totalCoinsEver,
     highScore,
     isGameOver,
     isHopping,
+    deathCause,
+    skins,
+    selectedSkin,
+    selectSkin,
     movePlayer,
     resetGame,
     GRID_SIZE,
@@ -23,11 +30,21 @@ const GameBoard = () => {
     PLAYER_SIZE,
   } = useGameLogic();
 
+  const [showReport, setShowReport] = useState(false);
+
   // Calculate visible lanes based on player position
   const cameraY = playerPos.y - 3;
   const visibleStart = Math.max(0, Math.floor(cameraY));
   const visibleEnd = visibleStart + VISIBLE_LANES + 2;
   const visibleLanes = lanes.slice(visibleStart, visibleEnd);
+
+  const handleShowReport = () => {
+    setShowReport(true);
+  };
+
+  const handleCloseReport = () => {
+    setShowReport(false);
+  };
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
@@ -74,7 +91,7 @@ const GameBoard = () => {
               transition: 'left 0.1s ease-out, bottom 0.1s ease-out',
             }}
           >
-            <Player isHopping={isHopping} />
+            <Player isHopping={isHopping} skin={selectedSkin} />
           </div>
         </div>
         
@@ -83,16 +100,44 @@ const GameBoard = () => {
         
         {/* Game Over Overlay */}
         {isGameOver && (
-          <GameOverlay score={score} highScore={highScore} onRestart={resetGame} />
+          <GameOverlay 
+            score={score} 
+            highScore={highScore} 
+            coinsCollected={coinsCollected}
+            deathCause={deathCause}
+            onRestart={resetGame}
+            onShowReport={handleShowReport}
+          />
         )}
       </div>
       
       <MobileControls onMove={movePlayer} disabled={isGameOver} />
       
+      {/* Skin Selector */}
+      <SkinSelector 
+        skins={skins}
+        selectedSkin={selectedSkin}
+        onSelectSkin={selectSkin}
+        totalCoins={totalCoinsEver}
+        highScore={highScore}
+      />
+      
       <p className="text-muted-foreground text-sm text-center">
         Use <span className="font-arcade text-xs text-primary">WASD</span> or{' '}
         <span className="font-arcade text-xs text-primary">Arrow Keys</span> to move
       </p>
+
+      {/* Report Card Modal */}
+      {showReport && (
+        <ReportCard
+          score={score}
+          highScore={highScore}
+          coinsCollected={coinsCollected}
+          totalCoinsEver={totalCoinsEver}
+          deathCause={deathCause}
+          onClose={handleCloseReport}
+        />
+      )}
     </div>
   );
 };

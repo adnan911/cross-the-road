@@ -1,14 +1,17 @@
 import { motion } from 'framer-motion';
-import { RotateCcw, Trophy } from 'lucide-react';
+import { RotateCcw, Trophy, FileText, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface GameOverlayProps {
   score: number;
   highScore: number;
+  coinsCollected: number;
+  deathCause: 'car' | 'water' | null;
   onRestart: () => void;
+  onShowReport: () => void;
 }
 
-const GameOverlay = ({ score, highScore, onRestart }: GameOverlayProps) => {
+const GameOverlay = ({ score, highScore, coinsCollected, deathCause, onRestart, onShowReport }: GameOverlayProps) => {
   const isNewHighScore = score >= highScore && score > 0;
   
   return (
@@ -21,7 +24,7 @@ const GameOverlay = ({ score, highScore, onRestart }: GameOverlayProps) => {
         initial={{ scale: 0.5, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
-        className="text-center space-y-6"
+        className="text-center space-y-4"
       >
         <motion.h2
           className="font-arcade text-2xl md:text-3xl text-destructive"
@@ -30,11 +33,27 @@ const GameOverlay = ({ score, highScore, onRestart }: GameOverlayProps) => {
         >
           GAME OVER
         </motion.h2>
+
+        {/* Death cause */}
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-muted-foreground text-sm"
+        >
+          {deathCause === 'water' ? '🌊 You drowned!' : '🚗 Hit by a car!'}
+        </motion.p>
         
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-center gap-3">
             <span className="text-muted-foreground font-medium">Score:</span>
             <span className="font-arcade text-xl text-foreground">{score}</span>
+          </div>
+
+          <div className="flex items-center justify-center gap-3">
+            <Coins className="w-4 h-4 text-game-road-marking" />
+            <span className="text-muted-foreground font-medium">Coins:</span>
+            <span className="font-arcade text-lg text-game-road-marking">{coinsCollected}</span>
           </div>
           
           {isNewHighScore && (
@@ -61,6 +80,7 @@ const GameOverlay = ({ score, highScore, onRestart }: GameOverlayProps) => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
+          className="flex flex-col gap-2"
         >
           <Button
             onClick={onRestart}
@@ -69,6 +89,16 @@ const GameOverlay = ({ score, highScore, onRestart }: GameOverlayProps) => {
           >
             <RotateCcw className="w-4 h-4" />
             PLAY AGAIN
+          </Button>
+          
+          <Button
+            onClick={onShowReport}
+            variant="outline"
+            size="sm"
+            className="font-arcade text-[10px] gap-2"
+          >
+            <FileText className="w-3 h-3" />
+            VIEW REPORT
           </Button>
         </motion.div>
         

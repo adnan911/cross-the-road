@@ -21,26 +21,54 @@ export interface Car {
   width: number;
 }
 
+export interface Log {
+  id: string;
+  x: number;
+  width: number;
+  speed: number;
+  direction: 1 | -1;
+}
+
 export interface Lane {
-  type: 'grass' | 'road';
+  type: 'grass' | 'road' | 'water';
   y: number;
   cars: Car[];
   coins: Coin[];
+  logs: Log[];
   speed: number;
   direction: 1 | -1;
+}
+
+export type SkinType = 'chicken' | 'duck' | 'frog' | 'bunny' | 'cat';
+
+export interface UnlockableSkin {
+  id: SkinType;
+  name: string;
+  requirement: { type: 'coins' | 'score'; value: number };
+  color: string;
+  unlocked: boolean;
 }
 
 const GRID_SIZE = 50;
 const PLAYER_SIZE = 40;
 const CAR_HEIGHT = 35;
 const COIN_SIZE = 24;
+const LOG_HEIGHT = 40;
 const GAME_WIDTH = 600;
 const VISIBLE_LANES = 12;
 const CAR_COLORS: Car['color'][] = ['red', 'blue', 'yellow', 'green', 'purple'];
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-const createLane = (y: number, type: 'grass' | 'road'): Lane => {
+const DEFAULT_SKINS: UnlockableSkin[] = [
+  { id: 'chicken', name: 'Chicken', requirement: { type: 'coins', value: 0 }, color: '#FFD93D', unlocked: true },
+  { id: 'duck', name: 'Duck', requirement: { type: 'coins', value: 10 }, color: '#FFA500', unlocked: false },
+  { id: 'frog', name: 'Frog', requirement: { type: 'coins', value: 25 }, color: '#4CAF50', unlocked: false },
+  { id: 'bunny', name: 'Bunny', requirement: { type: 'score', value: 50 }, color: '#FFB6C1', unlocked: false },
+  { id: 'cat', name: 'Cat', requirement: { type: 'score', value: 100 }, color: '#808080', unlocked: false },
+];
+
+const createLane = (y: number, type: 'grass' | 'road' | 'water'): Lane => {
   const coins: Coin[] = [];
   
   // Add coins to grass lanes (30% chance per lane, 1-2 coins)
@@ -56,7 +84,28 @@ const createLane = (y: number, type: 'grass' | 'road'): Lane => {
   }
   
   if (type === 'grass') {
-    return { type: 'grass', y, cars: [], coins, speed: 0, direction: 1 };
+    return { type: 'grass', y, cars: [], coins, logs: [], speed: 0, direction: 1 };
+  }
+  
+  if (type === 'water') {
+    const speed = 1 + Math.random() * 2;
+    const direction = Math.random() > 0.5 ? 1 : -1 as 1 | -1;
+    const logs: Log[] = [];
+    
+    // Generate 2-3 logs per water lane
+    const numLogs = 2 + Math.floor(Math.random() * 2);
+    const logSpacing = GAME_WIDTH / numLogs;
+    for (let i = 0; i < numLogs; i++) {
+      logs.push({
+        id: generateId(),
+        x: i * logSpacing + Math.random() * (logSpacing / 2),
+        width: 80 + Math.random() * 40,
+        speed,
+        direction,
+      });
+    }
+    
+    return { type: 'water', y, cars: [], coins: [], logs, speed, direction };
   }
   
   const speed = 1 + Math.random() * 3;
@@ -78,7 +127,7 @@ const createLane = (y: number, type: 'grass' | 'road'): Lane => {
     });
   }
   
-  return { type: 'road', y, cars, coins: [], speed, direction };
+  return { type: 'road', y, cars, coins: [], logs: [], speed, direction };
 };
 
 const generateInitialLanes = (): Lane[] => {
@@ -87,14 +136,35 @@ const generateInitialLanes = (): Lane[] => {
   // Start with grass
   lanes.push(createLane(0, 'grass'));
   
-  // Generate alternating patterns
+  // Generate varied patterns
   for (let i = 1; i < 50; i++) {
-    // Pattern: 2-4 roads, then 1-2 grass
-    const isRoadSection = Math.random() > 0.25;
-    lanes.push(createLane(i, isRoadSection ? 'road' : 'grass'));
+    const rand = Math.random();
+    // 50% road, 30% grass, 20% water
+    let type: 'grass' | 'road' | 'water';
+    if (rand < 0.5) {
+      type = 'road';
+    } else if (rand < 0.8) {
+      type = 'grass';
+    } else {
+      type = 'water';
+    }
+    lanes.push(createLane(i, type));
   }
   
   return lanes;
+};
+
+const loadSkins = (): UnlockableSkin[] => {
+  const saved = localStorage.getItem('crossySkins');
+  if (saved) {
+    return JSON.parse(saved);
+  }
+  return DEFAULT_SKINS;
+};
+
+const loadSelectedSkin = (): SkinType => {
+  const saved = localStorage.getItem('crossySelectedSkin');
+  return (saved as SkinType) || 'chicken';
 };
 
 export const useGameLogic = () => {
@@ -102,6 +172,10 @@ export const useGameLogic = () => {
   const [lanes, setLanes] = useState<Lane[]>(generateInitialLanes);
   const [score, setScore] = useState(0);
   const [coinsCollected, setCoinsCollected] = useState(0);
+  const [totalCoinsEver, setTotalCoinsEver] = useState(() => {
+    const saved = localStorage.getItem('crossyTotalCoins');
+    return saved ? parseInt(saved, 10) : 0;
+  });
   const [highScore, setHighScore] = useState(() => {
     const saved = localStorage.getItem('crossyHighScore');
     return saved ? parseInt(saved, 10) : 0;
@@ -109,8 +183,52 @@ export const useGameLogic = () => {
   const [maxY, setMaxY] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isHopping, setIsHopping] = useState(false);
+  const [deathCause, setDeathCause] = useState<'car' | 'water' | null>(null);
+  const [skins, setSkins] = useState<UnlockableSkin[]>(loadSkins);
+  const [selectedSkin, setSelectedSkin] = useState<SkinType>(loadSelectedSkin);
+  const [isOnLog, setIsOnLog] = useState(false);
+  const [currentLogSpeed, setCurrentLogSpeed] = useState<{ speed: number; direction: 1 | -1 } | null>(null);
   const gameLoopRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
+
+  // Save skins when they change
+  useEffect(() => {
+    localStorage.setItem('crossySkins', JSON.stringify(skins));
+  }, [skins]);
+
+  // Save selected skin
+  useEffect(() => {
+    localStorage.setItem('crossySelectedSkin', selectedSkin);
+  }, [selectedSkin]);
+
+  // Check and unlock skins
+  const checkSkinUnlocks = useCallback((currentScore: number, currentTotalCoins: number) => {
+    setSkins(prevSkins => {
+      let changed = false;
+      const newSkins = prevSkins.map(skin => {
+        if (skin.unlocked) return skin;
+        
+        if (skin.requirement.type === 'coins' && currentTotalCoins >= skin.requirement.value) {
+          changed = true;
+          return { ...skin, unlocked: true };
+        }
+        if (skin.requirement.type === 'score' && currentScore >= skin.requirement.value) {
+          changed = true;
+          return { ...skin, unlocked: true };
+        }
+        return skin;
+      });
+      
+      return changed ? newSkins : prevSkins;
+    });
+  }, []);
+
+  const selectSkin = useCallback((skinId: SkinType) => {
+    const skin = skins.find(s => s.id === skinId);
+    if (skin?.unlocked) {
+      setSelectedSkin(skinId);
+    }
+  }, [skins]);
 
   const checkCoinCollection = useCallback((px: number, py: number) => {
     setLanes((prevLanes) => {
@@ -135,7 +253,12 @@ export const useGameLogic = () => {
 
       if (collected) {
         setCoinsCollected((c) => c + 1);
-        setScore((s) => s + 5); // Bonus 5 points per coin
+        setTotalCoinsEver((prev) => {
+          const newTotal = prev + 1;
+          localStorage.setItem('crossyTotalCoins', newTotal.toString());
+          return newTotal;
+        });
+        setScore((s) => s + 5);
         return prevLanes.map((l, idx) => 
           idx === py ? { ...l, coins: updatedCoins } : l
         );
@@ -144,7 +267,7 @@ export const useGameLogic = () => {
     });
   }, []);
 
-  const checkCollision = useCallback((px: number, py: number, currentLanes: Lane[]): boolean => {
+  const checkCarCollision = useCallback((px: number, py: number, currentLanes: Lane[]): boolean => {
     const lane = currentLanes[py];
     if (!lane || lane.type !== 'road') return false;
 
@@ -169,6 +292,24 @@ export const useGameLogic = () => {
       }
     }
     return false;
+  }, []);
+
+  const checkWaterSafety = useCallback((px: number, py: number, currentLanes: Lane[]): { safe: boolean; log?: Log } => {
+    const lane = currentLanes[py];
+    if (!lane || lane.type !== 'water') return { safe: true };
+
+    const playerLeft = px - PLAYER_SIZE / 2 + 10;
+    const playerRight = px + PLAYER_SIZE / 2 - 10;
+
+    for (const log of lane.logs) {
+      const logLeft = log.x;
+      const logRight = log.x + log.width;
+
+      if (playerLeft >= logLeft && playerRight <= logRight) {
+        return { safe: true, log };
+      }
+    }
+    return { safe: false };
   }, []);
 
   const movePlayer = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
@@ -202,8 +343,12 @@ export const useGameLogic = () => {
           const newLanes = [...prevLanes];
           for (let i = 0; i < 10; i++) {
             const laneY = newLanes.length;
-            const isRoad = Math.random() > 0.3;
-            newLanes.push(createLane(laneY, isRoad ? 'road' : 'grass'));
+            const rand = Math.random();
+            let type: 'grass' | 'road' | 'water';
+            if (rand < 0.5) type = 'road';
+            else if (rand < 0.8) type = 'grass';
+            else type = 'water';
+            newLanes.push(createLane(laneY, type));
           }
           return newLanes;
         });
@@ -230,9 +375,12 @@ export const useGameLogic = () => {
     setMaxY(0);
     setIsGameOver(false);
     setIsHopping(false);
+    setDeathCause(null);
+    setIsOnLog(false);
+    setCurrentLogSpeed(null);
   }, []);
 
-  // Game loop for moving cars
+  // Game loop for moving cars, logs, and player on logs
   useEffect(() => {
     const gameLoop = (timestamp: number) => {
       if (!lastTimeRef.current) lastTimeRef.current = timestamp;
@@ -243,35 +391,102 @@ export const useGameLogic = () => {
         
         setLanes((prevLanes) => {
           const newLanes = prevLanes.map((lane) => {
-            if (lane.type !== 'road') return lane;
-            
-            const updatedCars = lane.cars.map((car) => {
-              let newX = car.x + car.speed * car.direction;
+            if (lane.type === 'road') {
+              const updatedCars = lane.cars.map((car) => {
+                let newX = car.x + car.speed * car.direction;
+                
+                // Wrap around
+                if (car.direction === 1 && newX > GAME_WIDTH + car.width) {
+                  newX = -car.width;
+                } else if (car.direction === -1 && newX < -car.width) {
+                  newX = GAME_WIDTH + car.width;
+                }
+                
+                return { ...car, x: newX };
+              });
               
-              // Wrap around
-              if (car.direction === 1 && newX > GAME_WIDTH + car.width) {
-                newX = -car.width;
-              } else if (car.direction === -1 && newX < -car.width) {
-                newX = GAME_WIDTH + car.width;
-              }
-              
-              return { ...car, x: newX };
-            });
+              return { ...lane, cars: updatedCars };
+            }
             
-            return { ...lane, cars: updatedCars };
+            if (lane.type === 'water') {
+              const updatedLogs = lane.logs.map((log) => {
+                let newX = log.x + log.speed * log.direction;
+                
+                // Wrap around
+                if (log.direction === 1 && newX > GAME_WIDTH + log.width) {
+                  newX = -log.width;
+                } else if (log.direction === -1 && newX < -log.width) {
+                  newX = GAME_WIDTH + log.width;
+                }
+                
+                return { ...log, x: newX };
+              });
+              
+              return { ...lane, logs: updatedLogs };
+            }
+            
+            return lane;
           });
           
-          // Check collision after cars move
-          if (!isGameOver && checkCollision(playerPos.x, playerPos.y, newLanes)) {
+          // Check car collision
+          if (!isGameOver && checkCarCollision(playerPos.x, playerPos.y, newLanes)) {
             setIsGameOver(true);
-            if (score > highScore) {
-              setHighScore(score);
-              localStorage.setItem('crossyHighScore', score.toString());
+            setDeathCause('car');
+            const finalScore = score;
+            if (finalScore > highScore) {
+              setHighScore(finalScore);
+              localStorage.setItem('crossyHighScore', finalScore.toString());
+            }
+            checkSkinUnlocks(finalScore, totalCoinsEver);
+          }
+          
+          // Check water safety
+          if (!isGameOver) {
+            const waterCheck = checkWaterSafety(playerPos.x, playerPos.y, newLanes);
+            const currentLane = newLanes[playerPos.y];
+            
+            if (currentLane?.type === 'water') {
+              if (!waterCheck.safe) {
+                setIsGameOver(true);
+                setDeathCause('water');
+                const finalScore = score;
+                if (finalScore > highScore) {
+                  setHighScore(finalScore);
+                  localStorage.setItem('crossyHighScore', finalScore.toString());
+                }
+                checkSkinUnlocks(finalScore, totalCoinsEver);
+              } else if (waterCheck.log) {
+                setIsOnLog(true);
+                setCurrentLogSpeed({ speed: waterCheck.log.speed, direction: waterCheck.log.direction });
+              }
+            } else {
+              setIsOnLog(false);
+              setCurrentLogSpeed(null);
             }
           }
           
           return newLanes;
         });
+        
+        // Move player with log
+        if (isOnLog && currentLogSpeed && !isGameOver) {
+          setPlayerPos(prev => {
+            let newX = prev.x + currentLogSpeed.speed * currentLogSpeed.direction;
+            
+            // Check boundaries
+            if (newX < PLAYER_SIZE / 2 || newX > GAME_WIDTH - PLAYER_SIZE / 2) {
+              setIsGameOver(true);
+              setDeathCause('water');
+              if (score > highScore) {
+                setHighScore(score);
+                localStorage.setItem('crossyHighScore', score.toString());
+              }
+              return prev;
+            }
+            
+            return { ...prev, x: newX };
+          });
+        }
       }
       
       gameLoopRef.current = requestAnimationFrame(gameLoop);
@@ -281,7 +496,7 @@ export const useGameLogic = () => {
     return () => {
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     };
-  }, [playerPos, isGameOver, checkCollision, score, highScore]);
+  }, [playerPos, isGameOver, checkCarCollision, checkWaterSafety, score, highScore, isOnLog, currentLogSpeed, checkSkinUnlocks, totalCoinsEver]);
 
   // Keyboard controls
   useEffect(() => {
@@ -330,9 +545,14 @@ export const useGameLogic = () => {
     lanes,
     score,
     coinsCollected,
+    totalCoinsEver,
     highScore,
     isGameOver,
     isHopping,
+    deathCause,
+    skins,
+    selectedSkin,
+    selectSkin,
     movePlayer,
     resetGame,
     GRID_SIZE,
@@ -340,5 +560,6 @@ export const useGameLogic = () => {
     VISIBLE_LANES,
     PLAYER_SIZE,
     CAR_HEIGHT,
+    LOG_HEIGHT,
   };
 };
