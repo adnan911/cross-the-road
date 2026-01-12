@@ -14,11 +14,11 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
   };
 
   const buttonClass = `
-    w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-background/60 backdrop-blur-md border border-border/50
+    w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-background/60 backdrop-blur-md border-2 border-border/50
     flex items-center justify-center text-foreground/80
     active:bg-primary active:text-primary-foreground active:scale-90
     transition-all duration-75 touch-manipulation select-none
-    disabled:opacity-20 shadow-lg hover:bg-background/80
+    disabled:opacity-20 shadow-xl hover:bg-background/80
   `;
 
   return (
@@ -28,52 +28,60 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
         whileTap={{ scale: 0.85 }}
         onTouchStart={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           handlePress('up');
         }}
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={() => handlePress('up')}
         disabled={disabled}
       >
-        <ChevronUp className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
+        <ChevronUp className="w-12 h-12 sm:w-16 sm:h-16" strokeWidth={3} />
       </motion.button>
-      
-      <div className="flex gap-1">
+
+      <div className="flex gap-2">
         <motion.button
           className={buttonClass}
           whileTap={{ scale: 0.85 }}
           onTouchStart={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             handlePress('left');
           }}
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={() => handlePress('left')}
           disabled={disabled}
         >
-          <ChevronLeft className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
+          <ChevronLeft className="w-12 h-12 sm:w-16 sm:h-16" strokeWidth={3} />
         </motion.button>
-        
+
         <motion.button
           className={buttonClass}
           whileTap={{ scale: 0.85 }}
           onTouchStart={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             handlePress('down');
           }}
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={() => handlePress('down')}
           disabled={disabled}
         >
-          <ChevronDown className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
+          <ChevronDown className="w-12 h-12 sm:w-16 sm:h-16" strokeWidth={3} />
         </motion.button>
-        
+
         <motion.button
           className={buttonClass}
           whileTap={{ scale: 0.85 }}
           onTouchStart={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             handlePress('right');
           }}
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={() => handlePress('right')}
           disabled={disabled}
         >
-          <ChevronRight className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
+          <ChevronRight className="w-12 h-12 sm:w-16 sm:h-16" strokeWidth={3} />
         </motion.button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useVisualEffects } from '@/hooks/useVisualEffects';
@@ -45,6 +45,72 @@ const GameBoard = () => {
   const [showReport, setShowReport] = useState(false);
   const [showDeathEffect, setShowDeathEffect] = useState(false);
   const [shakeFrame, setShakeFrame] = useState(0);
+
+  // Touch handling
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+
+    const touchEnd = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY
+    };
+
+    handleGestureEnd(touchStartRef.current, touchEnd);
+    touchStartRef.current = null;
+  };
+
+  // Mouse handling for desktop testing
+  const handleMouseDown = (e: React.MouseEvent) => {
+    touchStartRef.current = {
+      x: e.clientX,
+      y: e.clientY
+    };
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!touchStartRef.current) return;
+
+    const mouseEnd = {
+      x: e.clientX,
+      y: e.clientY
+    };
+
+    handleGestureEnd(touchStartRef.current, mouseEnd);
+    touchStartRef.current = null;
+  };
+
+  const handleGestureEnd = (start: { x: number; y: number }, end: { x: number; y: number }) => {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    // Threshold for swipe
+    const SWIPE_THRESHOLD = 30;
+
+    if (Math.max(absDx, absDy) > SWIPE_THRESHOLD) {
+      // Swipe detected
+      if (absDx > absDy) {
+        // Horizontal
+        movePlayer(dx > 0 ? 'right' : 'left');
+      } else {
+        // Vertical
+        movePlayer(dy > 0 ? 'down' : 'up');
+      }
+    } else {
+      // Tap (or small drag) detected - move forward
+      movePlayer('up');
+    }
+  };
 
   // Calculate visible lanes based on player position
   const cameraY = playerPos.y - 3;
@@ -109,7 +175,11 @@ const GameBoard = () => {
       <PowerUpDisplay activePowerUps={activePowerUps} />
 
       <motion.div
-        className="relative overflow-hidden rounded-2xl shadow-2xl border-4 border-muted"
+        className="relative overflow-hidden rounded-2xl shadow-2xl border-4 border-muted touch-none cursor-pointer"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
         style={{
           width: GAME_WIDTH,
           height: gameHeight,
@@ -260,8 +330,7 @@ const GameBoard = () => {
       />
 
       <p className="text-muted-foreground text-xs text-center hidden md:block">
-        Use <span className="font-arcade text-[10px] text-primary">WASD</span> or{' '}
-        <span className="font-arcade text-[10px] text-primary">Arrow Keys</span> to move
+        Use <span className="font-arcade text-[10px] text-primary">WASD</span>, <span className="font-arcade text-[10px] text-primary">Arrows</span>, <span className="font-arcade text-[10px] text-primary">Swipe</span> or <span className="font-arcade text-[10px] text-primary">Tap</span> to move
       </p>
 
       {/* Report Card Modal */}

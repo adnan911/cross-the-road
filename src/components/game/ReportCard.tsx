@@ -1,7 +1,8 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, Trophy, Coins, Skull } from 'lucide-react';
+import { X, Trophy, Coins, Skull, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import html2canvas from 'html2canvas';
 import './ReportCard.css';
 
 interface ReportCardProps {
@@ -28,6 +29,28 @@ const ReportCard = ({
     day: 'numeric',
     month: 'short'
   });
+
+  const handleDownload = async () => {
+    if (!cardRef.current) return;
+
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 2, // Higher quality
+        backgroundColor: null, // Transparent background if possible (though CSS usually defines it)
+        useCORS: true, // For external images if any
+      });
+
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `crossy-road-report-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Failed to download report card:', error);
+    }
+  };
 
   return (
     <motion.div
@@ -130,8 +153,12 @@ const ReportCard = ({
         </div>
 
         <div className="flex justify-center mt-6">
-          <Button className="bg-white text-black hover:bg-gray-200" disabled>
-            Download Coming Soon
+          <Button
+            className="bg-white text-black hover:bg-gray-200 gap-2 font-arcade tracking-wider"
+            onClick={handleDownload}
+          >
+            <Download className="w-4 h-4" />
+            Download Report Card
           </Button>
         </div>
       </div>
