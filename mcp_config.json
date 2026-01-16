@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "coinbase-docs": {
+            "url": "https://docs.cdp.coinbase.com/mcp",
+            "transport": "sse"
+        }
+    }
+}
