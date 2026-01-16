@@ -1,8 +1,12 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Trophy, Coins, Skull, Download } from 'lucide-react';
+import { X, Trophy, Coins, Download, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import html2canvas from 'html2canvas';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { WalletConnect } from '../WalletConnect';
+import { CrossTheRoadNFTABI, CONTRACT_ADDRESS } from '../../contracts/abi';
+import { toast } from 'sonner';
 import './ReportCard.css';
 
 interface ReportCardProps {
@@ -21,8 +25,22 @@ const ReportCard = ({
   totalCoinsEver,
   deathCause,
   onClose
-}: ReportCardProps) => { // eslint-disable-line @typescript-eslint/no-unused-vars
+}: ReportCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
+
+  const { address, isConnected } = useAccount();
+  const { data: hash, isPending, writeContract } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success("NFT Minted Successfully!", {
+        description: `Transaction Hash: ${hash}`,
+      });
+    }
+  }, [isSuccess, hash]);
 
   const date = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -35,9 +53,9 @@ const ReportCard = ({
 
     try {
       const canvas = await html2canvas(cardRef.current, {
-        scale: 2, // Higher quality
-        backgroundColor: null, // Transparent background if possible (though CSS usually defines it)
-        useCORS: true, // For external images if any
+        scale: 2,
+        backgroundColor: null,
+        useCORS: true,
       });
 
       const image = canvas.toDataURL('image/png');
@@ -49,7 +67,26 @@ const ReportCard = ({
       document.body.removeChild(link);
     } catch (error) {
       console.error('Failed to download report card:', error);
+      toast.error("Failed to download report.");
     }
+  };
+
+  const handleMint = () => {
+    if (!isConnected || !address) {
+      toast.error("Please connect your wallet first.");
+      return;
+    }
+    if (CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+      toast.error("Contract not deployed yet. Please set address in contracts/abi.ts");
+      return;
+    }
+
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CrossTheRoadNFTABI,
+      functionName: 'mint',
+      args: [address, BigInt(score)],
+    });
   };
 
   return (
@@ -59,8 +96,8 @@ const ReportCard = ({
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 report-card-preview"
     >
-      <div className="relative">
-        {/* Close button outside the card to not mess with the design */}
+      <div className="relative flex flex-col items-center gap-4">
+        {/* Close button outside the card */}
         <button
           onClick={onClose}
           className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
@@ -152,9 +189,28 @@ const ReportCard = ({
           </section>
         </div>
 
-        <div className="flex justify-center mt-6">
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <div className="bg-white/10 p-4 rounded-xl backdrop-blur-md flex flex-col gap-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-white font-bold text-sm">BASE MAINNET</span>
+              <WalletConnect />
+            </div>
+
+            {isConnected ? (
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 font-arcade w-full"
+                onClick={handleMint}
+                disabled={isPending || isConfirming}
+              >
+                {isPending || isConfirming ? 'Minting...' : 'Mint as NFT'}
+              </Button>
+            ) : (
+              <div className="text-center text-white/60 text-xs">Connect wallet to mint</div>
+            )}
+          </div>
+
           <Button
-            className="bg-white text-black hover:bg-gray-200 gap-2 font-arcade tracking-wider"
+            className="bg-white text-black hover:bg-gray-200 gap-2 font-arcade tracking-wider w-full"
             onClick={handleDownload}
           >
             <Download className="w-4 h-4" />
