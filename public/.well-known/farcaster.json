@@ -7,10 +7,10 @@
     "frame": {
         "version": "1",
         "name": "Cross The Road",
-        "iconUrl": "https://crosstheroad.base.org/icon.png",
-        "homeUrl": "https://crosstheroad.base.org",
-        "splashImageUrl": "https://crosstheroad.base.org/icon.png",
+        "iconUrl": "https://crossy-road-based.vercel.app/icon.png",
+        "homeUrl": "https://crossy-road-based.vercel.app",
+        "splashImageUrl": "https://crossy-road-based.vercel.app/icon.png",
         "splashBackgroundColor": "#1e3a8a",
-        "webhookUrl": "https://crosstheroad.base.org/api/webhook"
+        "webhookUrl": "https://crossy-road-based.vercel.app/api/webhook"
     }
 }
