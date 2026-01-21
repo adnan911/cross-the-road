@@ -1,0 +1,16 @@
+{
+    "accountAssociation": {
+        "header": "eyJmaWQiOjkxNTIsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgy... (YOU NEED TO GENERATE THIS)",
+        "payload": "eyJkb21haW4iOiJjcm9zc3RoZXJvYWQuYmFzZS5vcmcifQ...",
+        "signature": "MHhjYTA..."
+    },
+    "frame": {
+        "version": "1",
+        "name": "Cross The Road",
+        "iconUrl": "https://crosstheroad.base.org/icon.png",
+        "homeUrl": "https://crosstheroad.base.org",
+        "splashImageUrl": "https://crosstheroad.base.org/icon.png",
+        "splashBackgroundColor": "#1e3a8a",
+        "webhookUrl": "https://crosstheroad.base.org/api/webhook"
+    }
+}

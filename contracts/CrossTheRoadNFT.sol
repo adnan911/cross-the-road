@@ -17,7 +17,7 @@ contract CrossTheRoadNFT is ERC721URIStorage, Ownable {
     // Mapping from token ID to timestamp
     mapping(uint256 => uint256) public mintDates;
 
-    constructor() ERC721("CrossTheRoad Score", "cXc") Ownable(msg.sender) {}
+    constructor() ERC721("CTR_reportNFT", "cXc") Ownable(msg.sender) {}
 
     function mint(address to, uint256 score) public returns (uint256) {
         uint256 tokenId = _nextTokenId++;

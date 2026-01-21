@@ -1,248 +1,294 @@
-.report-card-preview .card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap');
+
+.report-card-overlay {
+  font-family: 'Fredoka', sans-serif;
+}
+
+.level-up-card {
   position: relative;
-  width: 220px;
-  height: 350px;
+  width: 320px;
+  background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
   border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.1);
-  background-color: white;
-  margin: 0 auto;
-}
-
-/* Scene section */
-.report-card-preview .scene-section {
-  position: relative;
-  width: 100%;
-  height: 70%;
-  overflow: hidden;
-  background-color: #2a2a2a;
-  /* Asphalt */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.report-card-preview .road-marking {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 4px;
-  background: repeating-linear-gradient(to bottom,
-      transparent 0,
-      transparent 20px,
-      #fbbf24 20px,
-      #fbbf24 60px);
-  transform: translateX(-50%);
-  opacity: 0.6;
-}
-
-.report-card-preview .road-texture {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(#ffffff 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: 0 0;
-  opacity: 0.05;
-}
-
-/* Crash Scene */
-.report-card-preview .crash-scene {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-}
-
-.report-card-preview .car-visual {
-  font-size: 80px;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-  transform: rotate(-15deg);
-  z-index: 2;
-}
-
-.report-card-preview .boom-visual {
-  position: absolute;
-  font-size: 100px;
-  filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.6));
-  animation: pulse-boom 2s infinite;
-  z-index: 3;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-@keyframes pulse-boom {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-/* Debris particles */
-.report-card-preview .debris {
-  position: absolute;
-  background-color: #ef4444;
-  width: 6px;
-  height: 6px;
-  border-radius: 2px;
-}
-
-.report-card-preview .debris:nth-child(1) {
-  top: 30%;
-  left: 30%;
-  transform: rotate(15deg);
-}
-
-.report-card-preview .debris:nth-child(2) {
-  top: 40%;
-  right: 25%;
-  background-color: #fbbf24;
-  transform: rotate(45deg);
-  width: 8px;
-  height: 8px;
-}
-
-.report-card-preview .debris:nth-child(3) {
-  bottom: 35%;
-  left: 40%;
-  transform: rotate(-30deg);
-}
-
-.report-card-preview .debris:nth-child(4) {
-  bottom: 45%;
-  right: 35%;
-  background-color: #fbbf24;
-  transform: rotate(60deg);
-}
-
-.report-card-preview .debris:nth-child(5) {
-  top: 25%;
-  right: 40%;
-  transform: rotate(120deg);
-  width: 4px;
-  height: 4px;
-}
-
-/* Darken the content section to match */
-.report-card-preview .content-section {
-  background: linear-gradient(to bottom, #1f2937, #111827);
+  padding: 20px;
   color: white;
-}
-
-/* Content section */
-.report-card-preview .content-section {
-  width: 100%;
-  height: 30%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 15px;
+  overflow: visible;
+  margin-top: 40px;
+  /* Space for the badge popping out */
 }
 
-.report-card-preview .weather-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
+/* Close/X Button */
+.card-close-btn {
   position: absolute;
-  text-align: center;
-  top: 0;
-  right: 0%;
-  width: 100%;
-  padding-top: 15px;
-  color: white;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: color 0.2s;
   z-index: 10;
 }
 
-.report-card-preview .weather-info .left-side:not(.icon) {
-  width: 20%;
-  font-size: 11pt;
-  font-weight: 600;
-  align-self: baseline;
+.card-close-btn:hover {
+  color: white;
 }
 
-.report-card-preview .icon {
+/* Header & Star Badge */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 40px;
+  /* Spacer for the title */
+}
+
+.star-badge {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  /* Center horizontally and add float animation */
+  transform: translateX(-50%);
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  z-index: 20;
+  animation: float-badge 3s ease-in-out infinite;
 }
 
-.report-card-preview .icon svg {
-  width: 40px;
+@keyframes float-badge {
+
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
 }
 
-.report-card-preview .weather-info .right-side {
+@keyframes float-badge {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Inner border for the star/badge */
+.star-badge::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  background: linear-gradient(135deg, #93c5fd 0%, #3b82f6 100%);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  z-index: 1;
+}
+
+.star-content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transform: translateY(2px);
+  /* visual centering */
 }
 
-.report-card-preview .weather-info .right-side p:nth-child(2) {
-  font-size: 9pt;
-  margin: 0;
-  padding: 0;
-}
-
-.report-card-preview .weather-info .location span {
-  font-size: 11pt;
+.star-label {
+  font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
+  color: #e0f2fe;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-.report-card-preview .location {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+.star-value {
+  font-size: 42px;
+  font-weight: 900;
+  color: white;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  margin-top: 15px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #93c5fd;
+  text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+/* Progress Bar */
+.progress-section {
   width: 100%;
-  padding: 0;
-  margin: 0;
 }
 
-.report-card-preview .location svg {
-  width: 14px;
-  height: auto;
+.progress-bar-container {
+  width: 100%;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-.report-card-preview .temperature {
-  font-size: 20pt;
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8 0%, #0ea5e9 100%);
+  border-radius: 10px;
+  transition: width 1s ease-out;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
   font-weight: 700;
-  line-height: 30px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
 }
 
-.report-card-preview .forecast {
+/* Stats List */
+.stats-list {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-evenly;
-  height: 100%;
-  width: 100%;
-  padding: 10px 25px;
+  gap: 10px;
 }
 
-.report-card-preview .forecast>div {
-  width: 100%;
+.stat-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  color: lightslategray;
-  font-size: 9pt;
+  gap: 12px;
+  padding: 8px 0;
 }
 
-.report-card-preview .separator {
+.stat-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-icon {
+  width: 20px;
+  height: 20px;
+  color: #93c5fd;
+}
+
+.stat-emoji {
+  font-size: 20px;
+}
+
+.stat-info h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.stat-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.2;
+}
+
+/* Footer / Collect Button */
+.card-footer {
   width: 100%;
-  height: 2px;
-  background-color: rgb(233, 233, 233);
-  border-radius: 1px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.collect-btn {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+  border: none;
+  border-radius: 12px;
+  color: #064e3b;
+  /* Dark green text */
+  font-family: 'Fredoka', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  box-shadow: 0 4px 0 #15803d, 0 8px 10px rgba(0, 0, 0, 0.3);
+  /* 3D effect */
+  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer;
+}
+
+.collect-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #15803d, 0 4px 5px rgba(0, 0, 0, 0.3);
+}
+
+.collect-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.download-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.download-link:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wallet-status {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 5px;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }

@@ -113,9 +113,10 @@ const GameBoard = () => {
   };
 
   // Calculate visible lanes based on player position
-  const cameraY = playerPos.y - 3;
-  const visibleStart = Math.max(0, Math.floor(cameraY));
-  const visibleEnd = visibleStart + VISIBLE_LANES + 2;
+  // Center camera slightly ahead of player (player at roughly 1/3 from bottom)
+  const cameraY = playerPos.y + 2;
+  const visibleStart = Math.max(0, Math.floor(cameraY - VISIBLE_LANES / 2 - 2));
+  const visibleEnd = visibleStart + VISIBLE_LANES + 4; // Add buffer
   const visibleLanes = lanes.slice(visibleStart, visibleEnd);
 
   // Check for boss lane warning

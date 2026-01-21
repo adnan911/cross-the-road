@@ -14,11 +14,11 @@ const MobileControls = ({ onMove, disabled }: MobileControlsProps) => {
   };
 
   const buttonClass = `
-    w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-background/60 backdrop-blur-md border-2 border-border/50
-    flex items-center justify-center text-foreground/80
-    active:bg-primary active:text-primary-foreground active:scale-90
+    w-32 h-32 sm:w-40 sm:h-40 rounded-3xl
+    flex items-center justify-center text-transparent
+    active:scale-90
     transition-all duration-75 touch-manipulation select-none
-    disabled:opacity-20 shadow-xl hover:bg-background/80
+    opacity-0 hover:opacity-0 active:opacity-0 focus:opacity-0
   `;
 
   return (

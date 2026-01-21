@@ -12,4 +12,4 @@ export const CrossTheRoadNFTABI = [
 ] as const;
 
 // Allow the user to fill this in after deployment
-export const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000" as const; 
+export const CONTRACT_ADDRESS = "0x4e45134997ff6b6729fe22ddf416ec88c2e7c494" as const; 
