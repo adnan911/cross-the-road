@@ -10,6 +10,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap");
 
 @tailwind base;
+@import '@coinbase/onchainkit/styles.css';
 @tailwind components;
 @tailwind utilities;
 

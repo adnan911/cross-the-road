@@ -75,14 +75,14 @@ const LOG_HEIGHT = 40;
 const POWER_UP_SIZE = 32;
 const POWER_UP_DURATION = 5000; // 5 seconds
 const MAGNET_RANGE = 150;
-const GAME_WIDTH = Math.min(400, window.innerWidth - 16); // Mobile-first width
+const GAME_WIDTH = Math.min(480, window.innerWidth); // Full width for mobile container
 const VISIBLE_LANES = 10; // Fewer lanes for mobile
 const CAR_COLORS: Car['color'][] = ['red', 'blue', 'yellow', 'green', 'purple'];
 const POWER_UP_TYPES: PowerUpType[] = ['invincibility', 'magnet', 'slowmo'];
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-const DEFAULT_SKINS: UnlockableSkin[] = [
+export const DEFAULT_SKINS: UnlockableSkin[] = [
   { id: 'chicken', name: 'Chicken', requirement: { type: 'coins', value: 0 }, color: '#FFD93D', unlocked: true },
   { id: 'duck', name: 'Duck', requirement: { type: 'coins', value: 15 }, color: '#FFA500', unlocked: false },
   { id: 'frog', name: 'Frog', requirement: { type: 'coins', value: 35 }, color: '#4CAF50', unlocked: false },
@@ -96,13 +96,13 @@ const DEFAULT_SKINS: UnlockableSkin[] = [
 const createLane = (y: number, type: 'grass' | 'road' | 'water', forceBoss: boolean = false): Lane => {
   const coins: Coin[] = [];
   const powerUps: PowerUp[] = [];
-  
+
   // Boss lane every 50 points (y positions)
   const isBossLane = forceBoss || (y > 0 && y % 50 === 0 && type === 'road');
-  
+
   // Reverse mode starts after 30 points, 20% chance
   const isReverse = y > 30 && Math.random() < 0.2;
-  
+
   // Add coins to grass lanes (30% chance per lane, 1-2 coins)
   if (type === 'grass' && y > 0 && Math.random() < 0.3) {
     const numCoins = 1 + Math.floor(Math.random() * 2);
@@ -114,7 +114,7 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water', forceBoss: bool
       });
     }
   }
-  
+
   // Add power-ups to grass lanes (10% chance per lane)
   if (type === 'grass' && y > 0 && Math.random() < 0.1) {
     powerUps.push({
@@ -124,16 +124,16 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water', forceBoss: bool
       collected: false,
     });
   }
-  
+
   if (type === 'grass') {
     return { type: 'grass', y, cars: [], coins, logs: [], powerUps, speed: 0, direction: 1, isBossLane: false, isReverse: false };
   }
-  
+
   if (type === 'water') {
     const speed = 1 + Math.random() * 1.5;
     const direction = Math.random() > 0.5 ? 1 : -1 as 1 | -1;
     const logs: Log[] = [];
-    
+
     const numLogs = 2 + Math.floor(Math.random() * 2);
     const logSpacing = GAME_WIDTH / numLogs;
     for (let i = 0; i < numLogs; i++) {
@@ -145,15 +145,15 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water', forceBoss: bool
         direction,
       });
     }
-    
+
     return { type: 'water', y, cars: [], coins: [], logs, powerUps: [], speed, direction, isBossLane: false, isReverse: false };
   }
-  
+
   // Road lane with cars
   const baseSpeed = isBossLane ? 4 + Math.random() * 2 : 1 + Math.random() * 2;
   const direction = Math.random() > 0.5 ? 1 : -1 as 1 | -1;
   const cars: Car[] = [];
-  
+
   if (isBossLane) {
     // Boss lane: one giant truck/train
     cars.push({
@@ -182,7 +182,7 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water', forceBoss: bool
         isBoss: false,
       });
     }
-    
+
     // In reverse mode, add a car going opposite direction
     if (isReverse && Math.random() < 0.5) {
       cars.push({
@@ -197,16 +197,16 @@ const createLane = (y: number, type: 'grass' | 'road' | 'water', forceBoss: bool
       });
     }
   }
-  
+
   return { type: 'road', y, cars, coins: [], logs: [], powerUps: [], speed: baseSpeed, direction, isBossLane, isReverse };
 };
 
 const generateInitialLanes = (): Lane[] => {
   const lanes: Lane[] = [];
-  
+
   // Start with grass
   lanes.push(createLane(0, 'grass'));
-  
+
   // Generate varied patterns
   for (let i = 1; i < 50; i++) {
     const rand = Math.random();
@@ -221,7 +221,7 @@ const generateInitialLanes = (): Lane[] => {
     }
     lanes.push(createLane(i, type));
   }
-  
+
   return lanes;
 };
 
@@ -260,14 +260,14 @@ export const useGameLogic = () => {
   const [isOnLog, setIsOnLog] = useState(false);
   const [currentLogSpeed, setCurrentLogSpeed] = useState<{ speed: number; direction: 1 | -1 } | null>(null);
   const [activePowerUps, setActivePowerUps] = useState<ActivePowerUp[]>([]);
-  
+
   // Combo system
   const [combo, setCombo] = useState(0);
   const [comboMultiplier, setComboMultiplier] = useState(1);
   const comboTimerRef = useRef<number | null>(null);
   const lastHopTimeRef = useRef<number>(0);
-  
-  const gameLoopRef = useRef<number>();
+
+  const gameLoopRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
   // Save skins when they change
@@ -286,7 +286,7 @@ export const useGameLogic = () => {
       let changed = false;
       const newSkins = prevSkins.map(skin => {
         if (skin.unlocked) return skin;
-        
+
         if (skin.requirement.type === 'coins' && currentTotalCoins >= skin.requirement.value) {
           changed = true;
           return { ...skin, unlocked: true };
@@ -297,7 +297,7 @@ export const useGameLogic = () => {
         }
         return skin;
       });
-      
+
       return changed ? newSkins : prevSkins;
     });
   }, []);
@@ -341,12 +341,12 @@ export const useGameLogic = () => {
       let collectedType: PowerUpType | null = null;
       const updatedPowerUps = lane.powerUps.map((powerUp) => {
         if (powerUp.collected) return powerUp;
-        
+
         const puLeft = powerUp.x - POWER_UP_SIZE / 2;
         const puRight = powerUp.x + POWER_UP_SIZE / 2;
         const playerLeft = px - PLAYER_SIZE / 2;
         const playerRight = px + PLAYER_SIZE / 2;
-        
+
         if (playerLeft < puRight && playerRight > puLeft) {
           collected = true;
           collectedType = powerUp.type;
@@ -357,7 +357,7 @@ export const useGameLogic = () => {
 
       if (collected && collectedType) {
         activatePowerUp(collectedType);
-        return prevLanes.map((l, idx) => 
+        return prevLanes.map((l, idx) =>
           idx === py ? { ...l, powerUps: updatedPowerUps } : l
         );
       }
@@ -368,26 +368,26 @@ export const useGameLogic = () => {
   const checkCoinCollection = useCallback((px: number, py: number, magnetActive: boolean) => {
     setLanes((prevLanes) => {
       let totalCollected = 0;
-      
+
       const newLanes = prevLanes.map((lane, idx) => {
         if (lane.type !== 'grass') return lane;
-        
+
         // Check coins in current lane and nearby lanes if magnet is active
-        const isInRange = magnetActive 
-          ? Math.abs(idx - py) <= 2 
+        const isInRange = magnetActive
+          ? Math.abs(idx - py) <= 2
           : idx === py;
-        
+
         if (!isInRange) return lane;
 
         let laneCollected = false;
         const updatedCoins = lane.coins.map((coin) => {
           if (coin.collected) return coin;
-          
+
           const coinLeft = coin.x - COIN_SIZE / 2;
           const coinRight = coin.x + COIN_SIZE / 2;
           const playerLeft = px - (magnetActive ? MAGNET_RANGE : PLAYER_SIZE / 2);
           const playerRight = px + (magnetActive ? MAGNET_RANGE : PLAYER_SIZE / 2);
-          
+
           if (playerLeft < coinRight && playerRight > coinLeft) {
             laneCollected = true;
             totalCollected++;
@@ -579,53 +579,53 @@ export const useGameLogic = () => {
     const gameLoop = (timestamp: number) => {
       if (!lastTimeRef.current) lastTimeRef.current = timestamp;
       const delta = timestamp - lastTimeRef.current;
-      
+
       if (delta > 16) { // ~60fps
         lastTimeRef.current = timestamp;
-        
+
         // Check for slow-mo power-up
         const slowMoActive = activePowerUps.some(p => p.type === 'slowmo' && p.endTime > Date.now());
         const speedMultiplier = slowMoActive ? 0.4 : 1;
-        
+
         setLanes((prevLanes) => {
           const newLanes = prevLanes.map((lane) => {
             if (lane.type === 'road') {
               const updatedCars = lane.cars.map((car) => {
                 let newX = car.x + car.speed * car.direction * speedMultiplier;
-                
+
                 // Wrap around
                 if (car.direction === 1 && newX > GAME_WIDTH + car.width) {
                   newX = -car.width;
                 } else if (car.direction === -1 && newX < -car.width) {
                   newX = GAME_WIDTH + car.width;
                 }
-                
+
                 return { ...car, x: newX };
               });
-              
+
               return { ...lane, cars: updatedCars };
             }
-            
+
             if (lane.type === 'water') {
               const updatedLogs = lane.logs.map((log) => {
                 let newX = log.x + log.speed * log.direction * speedMultiplier;
-                
+
                 // Wrap around
                 if (log.direction === 1 && newX > GAME_WIDTH + log.width) {
                   newX = -log.width;
                 } else if (log.direction === -1 && newX < -log.width) {
                   newX = GAME_WIDTH + log.width;
                 }
-                
+
                 return { ...log, x: newX };
               });
-              
+
               return { ...lane, logs: updatedLogs };
             }
-            
+
             return lane;
           });
-          
+
           // Check car collision (skip if invincible)
           const isInvincible = activePowerUps.some(p => p.type === 'invincibility' && p.endTime > Date.now());
           if (!isGameOver && !isInvincible && checkCarCollision(playerPos.x, playerPos.y, newLanes)) {
@@ -638,12 +638,12 @@ export const useGameLogic = () => {
             }
             checkSkinUnlocks(finalScore, totalCoinsEver);
           }
-          
+
           // Check water safety (skip if invincible)
           if (!isGameOver) {
             const waterCheck = checkWaterSafety(playerPos.x, playerPos.y, newLanes);
             const currentLane = newLanes[playerPos.y];
-            
+
             if (currentLane?.type === 'water') {
               if (!waterCheck.safe && !isInvincible) {
                 setIsGameOver(true);
@@ -667,15 +667,15 @@ export const useGameLogic = () => {
               setCurrentLogSpeed(null);
             }
           }
-          
+
           return newLanes;
         });
-        
+
         // Move player with log
         if (isOnLog && currentLogSpeed && !isGameOver) {
           setPlayerPos(prev => {
             let newX = prev.x + currentLogSpeed.speed * currentLogSpeed.direction;
-            
+
             // Check boundaries
             if (newX < PLAYER_SIZE / 2 || newX > GAME_WIDTH - PLAYER_SIZE / 2) {
               setIsGameOver(true);
@@ -686,12 +686,12 @@ export const useGameLogic = () => {
               }
               return prev;
             }
-            
+
             return { ...prev, x: newX };
           });
         }
       }
-      
+
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
 

@@ -1,20 +1,22 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useGameLogic } from '@/hooks/useGameLogic';
 import { useVisualEffects } from '@/hooks/useVisualEffects';
 import Player from './Player';
 import Lane from './Lane';
 import GameOverlay from './GameOverlay';
-import ScoreDisplay from './ScoreDisplay';
 import MobileControls from './MobileControls';
-import SkinSelector from './SkinSelector';
 import ReportCard from './ReportCard';
-import PowerUpDisplay from './PowerUpDisplay';
+// PowerUpDisplay removed (moved to UtilityPanel)
+// ScoreDisplay removed (moved to StatsRow)
 import WeatherEffects from './WeatherEffects';
 import DeathEffect from './DeathEffect';
 import ComboDisplay from './ComboDisplay';
 
-const GameBoard = () => {
+interface GameBoardProps {
+  gameLogic: any; // Type strictly if possible, or use return type of useGameLogic
+}
+
+const GameBoard = ({ gameLogic }: GameBoardProps) => {
   const {
     playerPos,
     lanes,
@@ -25,9 +27,7 @@ const GameBoard = () => {
     isGameOver,
     isHopping,
     deathCause,
-    skins,
     selectedSkin,
-    selectSkin,
     movePlayer,
     resetGame,
     activePowerUps,
@@ -38,8 +38,9 @@ const GameBoard = () => {
     GAME_WIDTH,
     VISIBLE_LANES,
     PLAYER_SIZE,
-  } = useGameLogic();
+  } = gameLogic;
 
+  // Visual effects can remain here or move up. Keeping here for now as they are tied to canvas rendering.
   const { timeOfDay, weather, screenShake, triggerShake, getShakeTransform } = useVisualEffects(score);
 
   const [showReport, setShowReport] = useState(false);
@@ -94,37 +95,30 @@ const GameBoard = () => {
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
 
-    // Threshold for swipe
     const SWIPE_THRESHOLD = 30;
 
     if (Math.max(absDx, absDy) > SWIPE_THRESHOLD) {
-      // Swipe detected
       if (absDx > absDy) {
-        // Horizontal
         movePlayer(dx > 0 ? 'right' : 'left');
       } else {
-        // Vertical
         movePlayer(dy > 0 ? 'down' : 'up');
       }
     } else {
-      // Tap (or small drag) detected - move forward
+      // Tap detected
       movePlayer('up');
     }
   };
 
-  // Calculate visible lanes based on player position
-  // Center camera slightly ahead of player (player at roughly 1/3 from bottom)
+  // Calculate visible lanes
   const cameraY = playerPos.y + 2;
   const visibleStart = Math.max(0, Math.floor(cameraY - VISIBLE_LANES / 2 - 2));
-  const visibleEnd = visibleStart + VISIBLE_LANES + 4; // Add buffer
+  const visibleEnd = visibleStart + VISIBLE_LANES + 4;
   const visibleLanes = lanes.slice(visibleStart, visibleEnd);
 
-  // Check for boss lane warning
   const currentLane = lanes[playerPos.y];
   const nextLane = lanes[playerPos.y + 1];
   const isBossAhead = nextLane?.isBossLane;
 
-  // Trigger effects on death
   useEffect(() => {
     if (isGameOver && deathCause) {
       setShowDeathEffect(true);
@@ -134,7 +128,6 @@ const GameBoard = () => {
     }
   }, [isGameOver, deathCause, triggerShake]);
 
-  // Animate screen shake
   useEffect(() => {
     if (!screenShake) return;
     const interval = setInterval(() => {
@@ -151,40 +144,33 @@ const GameBoard = () => {
     setShowReport(false);
   };
 
-  const handleRestart = useCallback(() => {
+  const handleRestart = () => {
     setShowDeathEffect(false);
     resetGame();
-  }, [resetGame]);
+  };
 
-  // Check if player has invincibility for visual effect
   const isInvincible = hasPowerUp('invincibility');
 
-  // Memoize shake transform
   const shakeTransform = useMemo(() => {
     if (!screenShake) return '';
     return getShakeTransform();
   }, [screenShake, shakeFrame, getShakeTransform]);
 
-  // Increase game height to accommodate floating controls
   const gameHeight = VISIBLE_LANES * GRID_SIZE + 100;
 
   return (
-    <div className="flex flex-col items-center gap-2 w-full px-2">
-      <ScoreDisplay score={score} highScore={highScore} coinsCollected={coinsCollected} />
-
-      {/* Active Power-ups */}
-      <PowerUpDisplay activePowerUps={activePowerUps} />
+    <div className="flex flex-col items-center w-full h-full relative">
+      {/* Removed ScoreDisplay & PowerUpDisplay */}
 
       <motion.div
-        className="relative overflow-hidden rounded-2xl shadow-2xl border-4 border-muted touch-none cursor-pointer"
+        className="relative overflow-hidden w-full h-full touch-none cursor-pointer"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         style={{
-          width: GAME_WIDTH,
-          height: gameHeight,
-          maxWidth: '100%',
+          width: '100%',
+          height: '100%',
           transform: shakeTransform,
         }}
         animate={screenShake ? {
@@ -196,19 +182,12 @@ const GameBoard = () => {
         {/* Day/Night overlay */}
         <div
           className="absolute inset-0 pointer-events-none z-20 transition-all duration-1000"
-          style={{
-            background: timeOfDay.overlayColor,
-          }}
+          style={{ background: timeOfDay.overlayColor }}
         />
 
         {/* Weather effects */}
-        <WeatherEffects
-          weather={weather}
-          width={GAME_WIDTH}
-          height={gameHeight}
-        />
+        <WeatherEffects weather={weather} width={GAME_WIDTH} height={gameHeight} />
 
-        {/* Combo Display */}
         <ComboDisplay combo={combo} multiplier={comboMultiplier} />
 
         {/* Boss warning */}
@@ -224,31 +203,27 @@ const GameBoard = () => {
           </motion.div>
         )}
 
-        {/* Game world container that moves with camera */}
+        {/* Game World Camera Container */}
         <div
-          className="absolute w-full"
+          className="absolute w-full left-1/2 -translate-x-1/2"
           style={{
+            width: GAME_WIDTH, // Constrain width of the actual game lanes
             height: lanes.length * GRID_SIZE,
-            bottom: 100, // Offset for floating controls
-            transform: `translateY(${cameraY * GRID_SIZE - (VISIBLE_LANES * GRID_SIZE) / 2 + GRID_SIZE}px)`,
+            bottom: 60, // Shift up slightly
+            transform: `translate(-50%, ${cameraY * GRID_SIZE - (VISIBLE_LANES * GRID_SIZE) / 2 + GRID_SIZE}px)`,
             transition: 'transform 0.2s ease-out',
           }}
         >
-          {/* Render visible lanes */}
-          {visibleLanes.map((lane) => (
+          {visibleLanes.map((lane: any) => (
             <div
               key={lane.y}
               className="absolute w-full"
-              style={{
-                bottom: lane.y * GRID_SIZE,
-                height: GRID_SIZE,
-              }}
+              style={{ bottom: lane.y * GRID_SIZE, height: GRID_SIZE }}
             >
               <Lane lane={lane} gridSize={GRID_SIZE} gameWidth={GAME_WIDTH} />
             </div>
           ))}
 
-          {/* Death Effect */}
           {showDeathEffect && deathCause && (
             <DeathEffect
               type={deathCause}
@@ -259,7 +234,6 @@ const GameBoard = () => {
             />
           )}
 
-          {/* Player */}
           <div
             className={`absolute z-20 ${isInvincible ? 'animate-pulse' : ''}`}
             style={{
@@ -276,10 +250,10 @@ const GameBoard = () => {
           </div>
         </div>
 
-        {/* Vignette effect */}
-        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.3)] z-20" />
+        {/* Vignette */}
+        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] z-20" />
 
-        {/* Time of day indicator */}
+        {/* Indicators */}
         <div className="absolute top-2 right-2 z-20 text-xs font-arcade px-2 py-1 rounded bg-background/50 backdrop-blur-sm">
           {timeOfDay.name === 'dawn' && '🌅'}
           {timeOfDay.name === 'day' && '☀️'}
@@ -294,7 +268,6 @@ const GameBoard = () => {
           )}
         </div>
 
-        {/* Reverse mode indicator */}
         {currentLane?.isReverse && !isGameOver && (
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 px-2 py-1 rounded bg-secondary/80 backdrop-blur-sm">
             <span className="font-arcade text-[8px] text-secondary-foreground">
@@ -303,12 +276,10 @@ const GameBoard = () => {
           </div>
         )}
 
-        {/* Floating Mobile Controls */}
         {!isGameOver && (
           <MobileControls onMove={movePlayer} disabled={isGameOver} />
         )}
 
-        {/* Game Over Overlay */}
         {isGameOver && (
           <GameOverlay
             score={score}
@@ -320,19 +291,6 @@ const GameBoard = () => {
           />
         )}
       </motion.div>
-
-      {/* Skin Selector - Always visible */}
-      <SkinSelector
-        skins={skins}
-        selectedSkin={selectedSkin}
-        onSelectSkin={selectSkin}
-        totalCoins={totalCoinsEver}
-        highScore={highScore}
-      />
-
-      <p className="text-muted-foreground text-xs text-center hidden md:block">
-        Use <span className="font-arcade text-[10px] text-primary">WASD</span>, <span className="font-arcade text-[10px] text-primary">Arrows</span>, <span className="font-arcade text-[10px] text-primary">Swipe</span> or <span className="font-arcade text-[10px] text-primary">Tap</span> to move
-      </p>
 
       {/* Report Card Modal */}
       {showReport && (

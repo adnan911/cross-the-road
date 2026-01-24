@@ -5,73 +5,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+    background-image: url('/frontpage.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     z-index: 50;
     overflow: hidden;
     font-family: 'Fredoka', sans-serif;
-}
-
-/* Animated Floating Background Shapes */
-.floating-shapes {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.shape {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.4;
-    animation: float-shape 10s infinite ease-in-out alternate;
-}
-
-.shape-1 {
-    width: 300px;
-    height: 300px;
-    background: #3b82f6;
-    top: -50px;
-    left: -50px;
-    animation-duration: 12s;
-}
-
-.shape-2 {
-    width: 400px;
-    height: 400px;
-    background: #2563eb;
-    bottom: -100px;
-    right: -100px;
-    animation-duration: 15s;
-}
-
-.shape-3 {
-    width: 200px;
-    height: 200px;
-    background: #60a5fa;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation-duration: 8s;
-}
-
-@keyframes float-shape {
-    0% {
-        transform: translate(0, 0) rotate(0deg);
-    }
-
-    33% {
-        transform: translate(20px, -15px) rotate(5deg);
-    }
-
-    66% {
-        transform: translate(-10px, 20px) rotate(-5deg);
-    }
-
-    100% {
-        transform: translate(0, 0) rotate(0deg);
-    }
 }
 
 /* Content Container */
@@ -81,107 +21,117 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 40px;
+    justify-content: space-between;
+    height: 100%;
     width: 100%;
-    max-width: 400px;
-    padding: 20px;
+    max-width: 480px;
+    padding: 60px 20px 40px;
 }
 
 /* Title Styling */
 .title-wrapper {
-    position: relative;
+    margin-top: 40px;
     text-align: center;
+    background: #eef2f3;
+    padding: 20px 40px;
+    border-radius: 40px;
+    border: 6px solid #b0c4de;
+    box-shadow: 0 10px 0 rgba(0, 0, 0, 0.1);
 }
 
 .game-title {
-    font-size: 64px;
+    font-size: 56px;
     line-height: 0.9;
     font-weight: 900;
-    color: #ffffff;
+    color: #60a5fa;
     text-transform: uppercase;
     text-shadow:
-        0 4px 0 #1e3a8a,
-        0 8px 0 rgba(0, 0, 0, 0.2);
-    transform: skew(-5deg);
-}
-
-.text-gradient {
-    background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: none;
-    /* Gradient text handles its own look, maybe add Drop Shadow filter if needed */
-    filter: drop-shadow(0 4px 0 #1e40af);
-}
-
-.title-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 120%;
-    height: 120%;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
-    z-index: -1;
-}
-
-/* Play Button */
-.play-btn-large {
-    width: 240px;
-    height: 80px;
-    font-size: 32px;
-    font-weight: 900;
-    text-transform: uppercase;
+        2px 2px 0 #fff,
+        -2px -2px 0 #fff,
+        2px -2px 0 #fff,
+        -2px 2px 0 #fff,
+        0 4px 0 rgba(0, 0, 0, 0.1);
     letter-spacing: 2px;
-    color: #064e3b;
-    /* Dark green text */
-    background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
-    border: none;
-    border-radius: 20px;
-    box-shadow:
-        0 6px 0 #15803d,
-        0 12px 20px rgba(0, 0, 0, 0.3),
-        inset 0 2px 0 rgba(255, 255, 255, 0.4);
-    transition: transform 0.1s, box-shadow 0.1s;
 }
 
-.play-btn-large:active {
-    transform: translateY(6px);
-    box-shadow:
-        0 0 0 #15803d,
-        0 6px 10px rgba(0, 0, 0, 0.3),
-        inset 0 2px 0 rgba(255, 255, 255, 0.4);
+.text-highlight {
+    color: #60a5fa;
+    display: block;
+    margin-top: 5px;
 }
 
-.play-btn-large:hover {
-    background: linear-gradient(180deg, #86efac 0%, #22c55e 100%);
-}
-
-/* Wallet and Footer */
-.wallet-wrapper {
-    background: rgba(15, 23, 42, 0.4);
-    padding: 10px 20px;
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    min-width: 200px;
-    display: flex;
-    justify-content: center;
-}
-
-.player-profile {
+/* Action Buttons Wrapper */
+.action-wrapper {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
+    gap: 16px;
+    width: 100%;
+    max-width: 280px;
+    margin-top: auto;
+    margin-bottom: 20px;
 }
 
-.footer-info {
-    margin-top: 20px;
-    color: #94a3b8;
-    font-size: 14px;
-    font-weight: 600;
+/* Base Menu Button */
+.menu-btn {
+    width: 100%;
+    height: 64px;
+    font-size: 28px;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    border: 4px solid #fff;
+    border-radius: 32px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+/* Play Button (Green) */
+.play-btn {
+    background: #86efac;
+    /* Light green */
+    color: #fff;
+    border-color: #fff;
+    box-shadow: 0 6px 0 #22c55e;
+}
+
+.play-btn:active {
+    transform: translateY(6px);
+    box-shadow: none;
+}
+
+/* Shop Button (Orange) */
+.shop-btn {
+    background: #fdba74;
+    /* Orange */
+    color: #fff;
+    border-color: #fff;
+    box-shadow: 0 6px 0 #f97316;
+}
+
+.shop-btn:active {
+    transform: translateY(6px);
+    box-shadow: none;
+}
+
+/* Settings Button (Purple) */
+.settings-btn {
+    background: #c084fc;
+    /* Purple */
+    color: #fff;
+    border-color: #fff;
+    box-shadow: 0 6px 0 #9333ea;
+}
+
+.settings-btn:active {
+    transform: translateY(6px);
+    box-shadow: none;
+}
+
+/* Wallet Wrapper */
+.wallet-wrapper {
+    margin-top: 20px;
 }
